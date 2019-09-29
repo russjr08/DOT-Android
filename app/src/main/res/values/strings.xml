@@ -1,8 +1,15 @@
 <resources>
-    <string name="app_name">Destiny Objective Tracker</string>
+    <string name="app_name">DOT</string>
 
     <!-- Login Activity / Strings -->
     <string name="landing_welcome_text">Welcome!</string>
     <string name="landing_text">To get started, you\'ll need to Authorize with Bungie.\nClick below to get started!</string>
     <string name="button_authorize_text">Authorize</string>
+
+    <string name="popup_login_progress_title">Logging You In…</string>
+    <string name="popup_login_progress_text">Logging in with Bungie. This should only take a moment!</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
 </resources>
