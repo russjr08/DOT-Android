@@ -12,6 +12,7 @@ interface DestinyService {
     @POST("app/oauth/token/")
     fun retrieveTokens(@Field("code") code: String, @Field("client_id") clientId: String,
                        @Field("grant_type") grantType: String,
-                       @Field("client_secret") clientSecret: String): Call<OAuthResponse>
+                       @Field("client_secret") clientSecret: String,
+                       @Field("refresh_token") refreshToken: String): Call<OAuthResponse>
 
 }

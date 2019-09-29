@@ -49,7 +49,7 @@ class LoginActivity : AppCompatActivity(), ILoginHandler {
             Log.d("DOT", "Retrieved OAuth Code: $code")
             showLoginInProcess()
 
-            LoginTask(this).execute(code)
+            LoginTask(this, this.applicationContext).execute(code)
         }
 
     }
@@ -140,14 +140,14 @@ interface ILoginHandler {
 
 class LoginTask(val handler: ILoginHandler, val rawContext: Context): AsyncTask<String, Void, Void>() {
 
-    private var ctx: WeakReference<Context>
-
-    init {
-        this.ctx = rawContext
-    }
+    private var ctx: WeakReference<Context> = WeakReference(rawContext)
 
     override fun doInBackground(vararg code: String?): Void? {
-        val destiny = Destiny(this.ctx)
+        if (ctx.get() == null) {
+            return null
+        }
+
+        val destiny = Destiny(ctx.get()!!)
         Logger.getLogger("DOT").info("Login attempt inbound!")
         val response = destiny.retrieveTokens(code[0] as String).execute()
 
