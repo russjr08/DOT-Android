@@ -3,9 +3,12 @@ package xyz.omnicron.apps.android.dot.api
 import android.content.Context
 import android.content.SharedPreferences
 import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import xyz.omnicron.apps.android.dot.api.interfaces.DestinyService
+import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
 import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
 import java.text.DateFormat
 import java.util.*
@@ -67,10 +70,21 @@ public class Destiny(ctx: Context) {
     /**
      * Reaches out to the Bungie token endpoint to exchange our refresh token for a new set of tokens.
      */
-    fun refreshAccessToken(): Call<OAuthResponse> {
+    fun refreshAccessToken(callback: IResponseReceiver<OAuthResponse>){
         //TODO: Implement persisting new set of tokens
         val refreshToken = prefs.getString("refreshToken", "INVALID") as String
-        return destinyApi.retrieveTokens("", Constants.CLIENT_ID, "refresh_token", Constants.CLIENT_SECRET, refreshToken)
+        val call = destinyApi.retrieveTokens("", Constants.CLIENT_ID, "refresh_token", Constants.CLIENT_SECRET, refreshToken)
+
+        call.enqueue(object : Callback<OAuthResponse> {
+            override fun onFailure(call: Call<OAuthResponse>, t: Throwable) {
+                callback.onNetworkFailure(call, t)
+            }
+
+            override fun onResponse(call: Call<OAuthResponse>, response: Response<OAuthResponse>) {
+                callback.onNetworkTaskFinished(response, call)
+            }
+
+        })
     }
 
     public class Constants {
