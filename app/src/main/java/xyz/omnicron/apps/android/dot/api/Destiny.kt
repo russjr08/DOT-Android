@@ -82,6 +82,21 @@ public class Destiny(ctx: Context) {
 
             override fun onResponse(call: Call<OAuthResponse>, response: Response<OAuthResponse>) {
                 callback.onNetworkTaskFinished(response, call)
+
+                if(response.isSuccessful && response.body() != null) {
+
+                    val accessExpiresIn = Date()
+                    accessExpiresIn.time = accessExpiresIn.time + (3600 * 1000)
+
+                    val refreshExpiresIn = Date()
+                    refreshExpiresIn.time = refreshExpiresIn.time + (3600 * 1000)
+
+                    prefs.edit().putString("accessToken", response.body()?.accessToken).apply()
+                    prefs.edit().putLong("accessTokenExpires", accessExpiresIn.time).apply()
+
+                    prefs.edit().putString("refreshToken", response.body()?.refreshToken).apply()
+                    prefs.edit().putLong("refreshTokenExpires", refreshExpiresIn.time).apply()
+                }
             }
 
         })
