@@ -2,6 +2,8 @@ package xyz.omnicron.apps.android.dot.api
 
 import android.content.Context
 import android.content.SharedPreferences
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -9,19 +11,27 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import xyz.omnicron.apps.android.dot.api.interfaces.DestinyService
 import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
+import xyz.omnicron.apps.android.dot.api.models.ManifestResponse
 import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
 import java.text.DateFormat
 import java.util.*
 
-public class Destiny(ctx: Context) {
+public class Destiny(ctx: Context): Interceptor {
 
     private val destinyApi: DestinyService
     private val prefs: SharedPreferences
 
 
     init {
+
+        val httpClient = OkHttpClient.Builder()
+        httpClient.addInterceptor(this)
+
+        val client = httpClient.build()
+
         val retrofit = Retrofit.Builder()
             .baseUrl(Constants.BASE_URL)
+            .client(client)
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
 
@@ -100,6 +110,33 @@ public class Destiny(ctx: Context) {
             }
 
         })
+    }
+
+    fun retrieveManifest(callback: IResponseReceiver<ManifestResponse>) {
+        val call = destinyApi.retrieveManifest()
+
+        call.enqueue(object: Callback<ManifestResponse> {
+            override fun onFailure(call: Call<ManifestResponse>, t: Throwable) {
+                callback.onNetworkFailure(call, t)
+            }
+
+            override fun onResponse(call: Call<ManifestResponse>, response: Response<ManifestResponse>) {
+                callback.onNetworkTaskFinished(response, call)
+            }
+
+        })
+    }
+
+    override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
+        val original = chain.request()
+
+        val request = original.newBuilder()
+            .header("X-API-KEY", Constants.API_KEY)
+            .method(original.method(), original.body())
+            .build()
+
+        return chain.proceed(request)
+
     }
 
     public class Constants {
