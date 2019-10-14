@@ -8,6 +8,8 @@
 
     <string name="popup_login_progress_title">Logging You In…</string>
     <string name="popup_login_progress_text">Logging in with Bungie. This should only take a moment!</string>
+    <string name="popup_login_failed_title">Login Failed</string>
+    <string name="popup_login_failed_text">We were unable to authenticate you with Bungie for some reason. Give it another go!</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>

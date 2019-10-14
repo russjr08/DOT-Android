@@ -19,7 +19,6 @@ import com.afollestad.materialdialogs.customview.customView
 import kotlinx.android.synthetic.main.activity_login.*
 import xyz.omnicron.apps.android.dot.api.Destiny
 import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
-import java.lang.ref.WeakReference
 import java.util.*
 import java.util.logging.Logger
 
@@ -84,6 +83,7 @@ class LoginActivity : AppCompatActivity(), ILoginHandler {
     private fun showLoginInProcess() {
         loginPopup?.customView(R.layout.popup_login_progress)
         loginPopup?.title(R.string.popup_login_progress_title)
+        loginPopup?.icon(R.drawable.lock_clock)
         loginPopup?.cancelable(false)
         loginPopup?.cancelOnTouchOutside(false)
         loginPopup?.show()
@@ -91,6 +91,13 @@ class LoginActivity : AppCompatActivity(), ILoginHandler {
 
     override fun onLoginAttemptFailed() {
         Logger.getLogger("DOT").info("Login attempt failed! :(")
+        loginPopup?.dismiss()
+
+        MaterialDialog(this).show {
+            title(R.string.popup_login_failed_title)
+            message(R.string.popup_login_failed_text)
+            icon(R.drawable.alert_circle)
+        }
     }
 
     override fun onLoginFinished(response: OAuthResponse) {
@@ -138,9 +145,7 @@ interface ILoginHandler {
     fun onLoginAttemptFailed()
 }
 
-class LoginTask(val handler: ILoginHandler, val rawContext: Context): AsyncTask<String, Void, Void>() {
-
-    private var ctx: WeakReference<Context> = WeakReference(rawContext)
+class LoginTask(val handler: ILoginHandler, val ctx: Context): AsyncTask<String, Void, Void>() {
 
     override fun doInBackground(vararg code: String?): Void? {
         if (ctx.get() == null) {
