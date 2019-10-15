@@ -10,6 +10,14 @@
     <string name="popup_login_progress_text">Logging in with Bungie. This should only take a moment!</string>
     <string name="popup_login_failed_title">Login Failed</string>
     <string name="popup_login_failed_text">We were unable to authenticate you with Bungie for some reason. Give it another go!</string>
+
+    <string name="popup_manifest_update_check_title">Checking for updates</string>
+    <string name="popup_manifest_update_check">Checking with Bungie to see if you have the latest copy of the Destiny 2 game database…</string>
+    <string name="popup_manifest_downloading_title">Database update in progress…</string>
+    <string name="popup_manifest_downloading">Downloading the latest game database from Bungie. This might take a moment… (Progress: %p%)</string>
+    <string name="popup_manifest_download_failure_title">Database download failure!</string>
+    <string name="popup_manifest_download_failure">Sorry, we were unable to download the latest game database from Bungie. The following error was presented: %e</string>
+
     <string name="title_activity_main">MainActivity</string>
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>

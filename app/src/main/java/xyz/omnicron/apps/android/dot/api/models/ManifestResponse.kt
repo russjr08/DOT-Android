@@ -8,5 +8,6 @@ class ManifestResponse(
 
 
 class Manifest (
-    @Json(name = "version") val version: String
+    @Json(name = "version") val version: String,
+    @Json(name = "mobileWorldContentPaths") val contentPaths: Map<String, String>
 )

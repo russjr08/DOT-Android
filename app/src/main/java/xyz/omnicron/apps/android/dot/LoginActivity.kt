@@ -16,19 +16,26 @@ import androidx.browser.customtabs.CustomTabsServiceConnection
 import androidx.core.content.ContextCompat
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.customview.customView
+import com.downloader.*
 import kotlinx.android.synthetic.main.activity_login.*
+import retrofit2.Call
+import retrofit2.Response
 import xyz.omnicron.apps.android.dot.api.Destiny
+import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
+import xyz.omnicron.apps.android.dot.api.models.ManifestResponse
 import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
 import java.util.*
 import java.util.logging.Logger
 
-class LoginActivity : AppCompatActivity(), ILoginHandler {
-
+class LoginActivity : AppCompatActivity(), ILoginHandler, IResponseReceiver<ManifestResponse>, OnProgressListener, OnDownloadListener {
 
     var tabConnection: CustomTabsServiceConnection? = null
     var loginPopup: MaterialDialog? = null
+    var manifestPopup: MaterialDialog? = null
 
     var preferences: SharedPreferences? = null
+
+    var manifestVersionPending: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,7 +126,8 @@ class LoginActivity : AppCompatActivity(), ILoginHandler {
 
         loginPopup?.dismiss()
 
-        exitLoginActivity()
+        checkAndDownloadManifest()
+        //exitLoginActivity()
 
     }
 
@@ -128,6 +136,92 @@ class LoginActivity : AppCompatActivity(), ILoginHandler {
         startActivity(intent)
 
         finish()
+    }
+
+    private fun checkAndDownloadManifest() {
+        val destiny = Destiny(this)
+
+        manifestPopup = MaterialDialog(this).show {
+            title(R.string.popup_manifest_update_check_title)
+            message(R.string.popup_manifest_update_check)
+            noAutoDismiss()
+        }
+
+        destiny.retrieveManifest(this)
+    }
+
+    override fun onNetworkTaskFinished(response: Response<ManifestResponse>, request: Call<ManifestResponse>) {
+
+        if(response.isSuccessful) {
+            val manifestResponse = response.body() ?: TODO("Not Implemented Yet")
+            val manifest = manifestResponse.data
+
+            if(preferences!!.getString("manifestVersion", "NONE") != manifest.version) {
+                // Download the latest game database (manifest)
+                manifestVersionPending = manifest.version
+
+                manifestPopup?.title(R.string.popup_manifest_downloading_title)
+                manifestPopup?.message(null, getString(R.string.popup_manifest_downloading).replace("%p", "0"))
+                val baseURL = "https://www.bungie.net"
+                val manifestURL = baseURL + manifest.contentPaths["en"]
+                val downloadID = PRDownloader.download(manifestURL, filesDir.absolutePath, "manifest.content")
+                    .build()
+                    .setOnProgressListener(this)
+                    .start(this)
+            } else {
+                // Manifest is already downloaded and up-to-date, carry on!
+                manifestPopup?.dismiss()
+                exitLoginActivity()
+            }
+
+        }
+
+    }
+
+    override fun onNetworkFailure(request: Call<ManifestResponse>, error: Throwable) {
+        manifestPopup?.dismiss()
+        MaterialDialog(this).show {
+            title(R.string.popup_manifest_download_failure_title)
+            if(error.localizedMessage != null) {
+                val errString = getString(R.string.popup_manifest_download_failure).replace(
+                    "%e",
+                    error.localizedMessage as String
+                )
+
+                message(null, errString)
+            } else {
+                val errString = getString(R.string.popup_manifest_download_failure).replace(
+                    "%e",
+                    "Unknown Error"
+                )
+
+                message(null, errString)
+            }
+        }
+    }
+
+    // Manifest download management
+
+    override fun onProgress(progress: Progress?) {
+        if(progress == null) return
+        val currentAsDouble = progress.currentBytes.toDouble()
+        val totalAsDouble = progress.totalBytes.toDouble()
+        val percentage = Math.ceil(currentAsDouble / totalAsDouble * 100.0)
+        this.runOnUiThread {
+            this.manifestPopup?.message(null, getString(R.string.popup_manifest_downloading).replace("%p", percentage.toString()))
+        }
+    }
+
+    override fun onDownloadComplete() {
+        println("Download finished!")
+        manifestPopup?.dismiss()
+        // Flag Manifest as Downloaded
+        preferences?.edit()?.putString("manifestVersion", manifestVersionPending)?.apply()
+        exitLoginActivity()
+    }
+
+    override fun onError(error: Error?) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
 }
@@ -145,24 +239,21 @@ interface ILoginHandler {
     fun onLoginAttemptFailed()
 }
 
-class LoginTask(val handler: ILoginHandler, val ctx: Context): AsyncTask<String, Void, Void>() {
+class LoginTask(val handler: ILoginHandler, val ctx: Context): AsyncTask<String, Void, Response<OAuthResponse>>() {
 
-    override fun doInBackground(vararg code: String?): Void? {
-        if (ctx.get() == null) {
-            return null
-        }
-
-        val destiny = Destiny(ctx.get()!!)
+    override fun doInBackground(vararg code: String?): Response<OAuthResponse> {
+        val destiny = Destiny(ctx)
         Logger.getLogger("DOT").info("Login attempt inbound!")
-        val response = destiny.retrieveTokens(code[0] as String).execute()
+        return destiny.retrieveTokens(code[0] as String).execute()
+    }
+
+    override fun onPostExecute(response: Response<OAuthResponse>) {
 
         if(response.isSuccessful) {
             handler.onLoginFinished(response.body() as OAuthResponse)
         } else {
             handler.onLoginAttemptFailed()
         }
-
-        return null
     }
 
 }

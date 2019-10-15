@@ -18,7 +18,6 @@ interface DestinyService {
                        @Field("refresh_token") refreshToken: String): Call<OAuthResponse>
 
     @GET("Destiny2/Manifest/")
-
     fun retrieveManifest(): Call<ManifestResponse>
 
 }
