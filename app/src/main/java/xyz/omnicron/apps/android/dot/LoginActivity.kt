@@ -18,6 +18,9 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.customview.customView
 import com.downloader.*
 import kotlinx.android.synthetic.main.activity_login.*
+import org.koin.android.ext.android.inject
+import org.koin.core.KoinComponent
+import org.koin.core.inject
 import retrofit2.Call
 import retrofit2.Response
 import xyz.omnicron.apps.android.dot.api.Destiny
@@ -37,6 +40,8 @@ class LoginActivity : AppCompatActivity(), ILoginHandler, IResponseReceiver<Mani
 
     var manifestVersionPending: String? = null
 
+    val destiny: Destiny by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -55,7 +60,7 @@ class LoginActivity : AppCompatActivity(), ILoginHandler, IResponseReceiver<Mani
             Log.d("DOT", "Retrieved OAuth Code: $code")
             showLoginInProcess()
 
-            LoginTask(this, this.applicationContext).execute(code)
+            LoginTask(this).execute(code)
         }
 
     }
@@ -139,7 +144,6 @@ class LoginActivity : AppCompatActivity(), ILoginHandler, IResponseReceiver<Mani
     }
 
     private fun checkAndDownloadManifest() {
-        val destiny = Destiny(this)
 
         manifestPopup = MaterialDialog(this).show {
             title(R.string.popup_manifest_update_check_title)
@@ -164,7 +168,7 @@ class LoginActivity : AppCompatActivity(), ILoginHandler, IResponseReceiver<Mani
                 manifestPopup?.message(null, getString(R.string.popup_manifest_downloading).replace("%p", "0"))
                 val baseURL = "https://www.bungie.net"
                 val manifestURL = baseURL + manifest.contentPaths["en"]
-                val downloadID = PRDownloader.download(manifestURL, filesDir.absolutePath, "manifest.content")
+                PRDownloader.download(manifestURL, filesDir.absolutePath, "manifest.content")
                     .build()
                     .setOnProgressListener(this)
                     .start(this)
@@ -239,10 +243,10 @@ interface ILoginHandler {
     fun onLoginAttemptFailed()
 }
 
-class LoginTask(val handler: ILoginHandler, val ctx: Context): AsyncTask<String, Void, Response<OAuthResponse>>() {
+class LoginTask(val handler: ILoginHandler): AsyncTask<String, Void, Response<OAuthResponse>>(), KoinComponent {
 
     override fun doInBackground(vararg code: String?): Response<OAuthResponse> {
-        val destiny = Destiny(ctx)
+        val destiny: Destiny by inject()
         Logger.getLogger("DOT").info("Login attempt inbound!")
         return destiny.retrieveTokens(code[0] as String).execute()
     }
