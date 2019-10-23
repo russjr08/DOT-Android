@@ -15,7 +15,6 @@ import xyz.omnicron.apps.android.dot.api.interfaces.DestinyService
 import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
 import xyz.omnicron.apps.android.dot.api.models.ManifestResponse
 import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
-import java.text.DateFormat
 import java.util.*
 
 class Destiny(ctx: Context): Interceptor {
