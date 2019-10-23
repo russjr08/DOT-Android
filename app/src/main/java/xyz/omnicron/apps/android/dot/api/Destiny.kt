@@ -2,21 +2,22 @@ package xyz.omnicron.apps.android.dot.api
 
 import android.content.Context
 import android.content.SharedPreferences
+import io.reactivex.schedulers.Schedulers
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import xyz.omnicron.apps.android.dot.api.interfaces.DestinyService
 import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
 import xyz.omnicron.apps.android.dot.api.models.ManifestResponse
 import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
-import java.text.DateFormat
 import java.util.*
 
-public class Destiny(ctx: Context): Interceptor {
+class Destiny(ctx: Context): Interceptor {
 
     private val destinyApi: DestinyService
     private val prefs: SharedPreferences
@@ -32,6 +33,7 @@ public class Destiny(ctx: Context): Interceptor {
         val retrofit = Retrofit.Builder()
             .baseUrl(Constants.BASE_URL)
             .client(client)
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
 
@@ -139,7 +141,7 @@ public class Destiny(ctx: Context): Interceptor {
 
     }
 
-    public class Constants {
+    class Constants {
 
         companion object {
             val API_KEY = "ef8699ee753947409bab21607d63c3bb"

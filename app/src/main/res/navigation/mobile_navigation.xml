@@ -3,23 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">
+    app:startDestination="@+id/nav_pursuits">
 
     <fragment
-        android:id="@+id/navigation_home"
-        android:name="xyz.omnicron.apps.android.dot.ui.home.HomeFragment"
-        android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        android:id="@+id/nav_pursuits"
+        android:name="xyz.omnicron.apps.android.dot.ui.pursuits.PursuitsFragment"
+        android:label="@string/menu_pursuits"
+        tools:layout="@layout/pursuits_fragment" />
 
-    <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="xyz.omnicron.apps.android.dot.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
-
-    <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="xyz.omnicron.apps.android.dot.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
 </navigation>

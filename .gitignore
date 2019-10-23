@@ -298,3 +298,5 @@ fabric.properties
 !/gradle/wrapper/gradle-wrapper.jar
 
 # End of https://www.gitignore.io/api/macos,gradle,kotlin,windows,android,androidstudio
+
+.idea/discord.xml
