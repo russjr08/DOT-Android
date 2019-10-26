@@ -1,7 +1,8 @@
+apply plugin: 'kotlin-kapt'
+
 apply plugin: 'com.android.application'
 
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
 
 apply plugin: 'kotlin-android-extensions'
 
@@ -78,6 +79,9 @@ dependencies {
 
     // optional - RxJava support for Room
     implementation "androidx.room:room-rxjava2:$room_version"
+
+    // Zip library for Android
+    implementation 'org.zeroturnaround:zt-zip:1.13'
 
 
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'

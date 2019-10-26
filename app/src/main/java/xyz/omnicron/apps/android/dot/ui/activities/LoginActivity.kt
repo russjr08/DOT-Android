@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.activity_login.*
 import org.koin.android.ext.android.inject
 import org.koin.core.KoinComponent
 import org.koin.core.inject
+import org.zeroturnaround.zip.ZipUtil
 import retrofit2.Call
 import retrofit2.Response
 import xyz.omnicron.apps.android.dot.R
@@ -30,6 +31,7 @@ import xyz.omnicron.apps.android.dot.api.models.ManifestResponse
 import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
 import java.util.*
 import java.util.logging.Logger
+import kotlin.math.ceil
 
 class LoginActivity : AppCompatActivity(),
     ILoginHandler, IResponseReceiver<ManifestResponse>, OnProgressListener, OnDownloadListener {
@@ -159,29 +161,45 @@ class LoginActivity : AppCompatActivity(),
 
     override fun onNetworkTaskFinished(response: Response<ManifestResponse>, request: Call<ManifestResponse>) {
 
-        if(response.isSuccessful) {
-            val manifestResponse = response.body() ?: TODO("Not Implemented Yet")
-            val manifest = manifestResponse.data
+        preferences?.let {
+            val preferences = it
 
-            if(preferences!!.getString("manifestVersion", "NONE") != manifest.version) {
-                // Download the latest game database (manifest)
-                manifestVersionPending = manifest.version
+            if(response.isSuccessful) {
+                val manifestResponse = response.body() ?: TODO("Not Implemented Yet")
+                val manifest = manifestResponse.data
 
-                manifestPopup?.title(R.string.popup_manifest_downloading_title)
-                manifestPopup?.message(null, getString(R.string.popup_manifest_downloading).replace("%p", "0"))
-                val baseURL = "https://www.bungie.net"
-                val manifestURL = baseURL + manifest.contentPaths["en"]
-                PRDownloader.download(manifestURL, filesDir.absolutePath, "manifest.content")
-                    .build()
-                    .setOnProgressListener(this)
-                    .start(this)
-            } else {
-                // Manifest is already downloaded and up-to-date, carry on!
-                manifestPopup?.dismiss()
-                exitLoginActivity()
+                if(preferences.getString("manifestVersion", "NONE") != manifest.version) {
+                    // Download the latest game database (manifest)
+                    manifestVersionPending = manifest.version
+
+                    manifestPopup?.title(R.string.popup_manifest_downloading_title)
+                    manifestPopup?.message(null, getString(R.string.popup_manifest_downloading).replace("%p", "0"))
+                    val baseURL = "https://www.bungie.net"
+
+                    if(manifest.contentPaths["en"] == null) {
+                        TODO("Implement manifest check failure")
+                    }
+
+                    val manifestURL = baseURL + manifest.contentPaths["en"]
+
+                    val manifestPathArray = manifest.contentPaths["en"]?.split("/")
+                    val manifestName = manifestPathArray?.get(manifestPathArray.size - 1)
+
+                    preferences.edit().putString("manifestName", manifestName).apply()
+
+                    PRDownloader.download(manifestURL, filesDir.absolutePath, "manifest.zip")
+                        .build()
+                        .setOnProgressListener(this)
+                        .start(this)
+                } else {
+                    // Manifest is already downloaded and up-to-date, carry on!
+                    manifestPopup?.dismiss()
+                    exitLoginActivity()
+                }
+
             }
-
         }
+
 
     }
 
@@ -213,7 +231,7 @@ class LoginActivity : AppCompatActivity(),
         if(progress == null) return
         val currentAsDouble = progress.currentBytes.toDouble()
         val totalAsDouble = progress.totalBytes.toDouble()
-        val percentage = Math.ceil(currentAsDouble / totalAsDouble * 100.0)
+        val percentage = ceil(currentAsDouble / totalAsDouble * 100.0)
         this.runOnUiThread {
             this.manifestPopup?.message(null, getString(R.string.popup_manifest_downloading).replace("%p", percentage.toString()))
         }
@@ -224,6 +242,15 @@ class LoginActivity : AppCompatActivity(),
         manifestPopup?.dismiss()
         // Flag Manifest as Downloaded
         preferences?.edit()?.putString("manifestVersion", manifestVersionPending)?.apply()
+
+        val manifestName = preferences?.getString("manifestName", "")
+        if(manifestName.isNullOrEmpty()) {
+            TODO("Manifest is empty")
+        }
+
+        // Manifest needs to be unzipped after downloading
+        ZipUtil.unpack(getFileStreamPath("manifest.zip"), getDatabasePath(manifestName).parentFile)
+
         exitLoginActivity()
     }
 
