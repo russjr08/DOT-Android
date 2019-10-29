@@ -42,13 +42,6 @@ class MainActivity : AppCompatActivity() {
 
         this.app = application as App
 
-        app.initializeDatabase()
-
-        val subscriber = app.database.inventoryItemDao().getAllItemDefinitions().observeOn(
-            Schedulers.io())
-            .subscribe {
-                println(it)
-            }
 
     }
 
