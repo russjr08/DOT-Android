@@ -1,5 +1,7 @@
 package xyz.omnicron.apps.android.dot.api.models
 
+import java.util.*
+
 class UserProfile {
 }
 
@@ -20,3 +22,13 @@ enum class MembershipType(val value: Int) {
         fun from(findValue: Int): MembershipType = MembershipType.values().first { it.value == findValue }
     }
 }
+
+data class BungieNetUser(
+    val displayName: String,
+    val about: String,
+    val firstAccess: Date?,
+    val lastUpdate: Date?,
+    val membershipId: Long,
+    val profilePicturePath: String,
+    val profileThemeName: String
+)

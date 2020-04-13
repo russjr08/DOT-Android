@@ -17,10 +17,9 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import xyz.omnicron.apps.android.dot.api.interfaces.DestinyService
 import xyz.omnicron.apps.android.dot.api.interfaces.IApiResponseCallback
 import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
-import xyz.omnicron.apps.android.dot.api.models.DestinyMembership
-import xyz.omnicron.apps.android.dot.api.models.ManifestResponse
-import xyz.omnicron.apps.android.dot.api.models.MembershipType
-import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
+import xyz.omnicron.apps.android.dot.api.models.*
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.*
 
 @Suppress("NAME_SHADOWING")
@@ -180,6 +179,39 @@ class Destiny(ctx: Context): Interceptor {
 
         })
 
+    }
+
+    fun getBungieNetUser(callback: IApiResponseCallback<BungieNetUser>) {
+        val call = destinyApi.retrieveMemberships(prefs.getInt("bngMembershipId", 0))
+
+        call.enqueue(object: Callback<JSONObject> {
+            override fun onFailure(call: Call<JSONObject>, t: Throwable) {
+                callback.onRequestFailed(t)
+            }
+
+            override fun onResponse(call: Call<JSONObject>, response: Response<JSONObject>) {
+                if(response.isSuccessful) {
+                    val responseObj = response.body()?.getJSONObject("Response")
+                    responseObj?.let { response ->
+                        val bungieNetUserNode = response.getJSONObject("bungieNetUser")
+                        bungieNetUserNode?.let { userNode ->
+                            val bungieNetUser = BungieNetUser(
+                                displayName = userNode.getString("displayName"),
+                                about = userNode.getString("about"),
+                                firstAccess = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(userNode.getString("firstAccess")),
+                                lastUpdate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(userNode.getString("lastUpdate")),
+                                membershipId = userNode.getLong("membershipId"),
+                                profilePicturePath = userNode.getString("profilePicturePath"),
+                                profileThemeName = userNode.getString("profileThemeName")
+                            )
+
+                            callback.onRequestSuccess(bungieNetUser)
+                        }
+                    }
+                }
+            }
+
+        })
     }
 
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
