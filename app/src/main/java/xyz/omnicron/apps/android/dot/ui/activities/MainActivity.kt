@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
 
         this.app = application as App
 
+        val destinyDatabase = DestinyDatabase(this, prefs.getString("manifestName", "").orEmpty())
 
     }
 
