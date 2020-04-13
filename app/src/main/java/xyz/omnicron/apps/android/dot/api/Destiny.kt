@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import io.reactivex.schedulers.Schedulers
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import retrofit.JSONConverterFactory
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -34,6 +35,7 @@ class Destiny(ctx: Context): Interceptor {
             .baseUrl(Constants.BASE_URL)
             .client(client)
             .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
+            .addConverterFactory(JSONConverterFactory.create())
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
 
@@ -134,7 +136,7 @@ class Destiny(ctx: Context): Interceptor {
 
         val request = original.newBuilder()
             .header("X-API-KEY", Constants.API_KEY)
-            .method(original.method(), original.body())
+            .method(original.method, original.body)
             .build()
 
         return chain.proceed(request)
