@@ -69,6 +69,12 @@ class MainActivity : AppCompatActivity() {
     private fun promptForUserMembershipChoice() {
         destiny.getUserMemberships(callback = object : IApiResponseCallback<Array<DestinyMembership>> {
             override fun onRequestSuccess(data: Array<DestinyMembership>) {
+
+                if(data.size > 1) {
+                    prefs.edit().putLong("membershipId", data[0].membershipId).apply()
+                    prefs.edit().putInt("membershipType", data[0].membershipType.value).apply()
+                }
+
                 val platformNames = arrayListOf<String>()
                 for(membership in data) {
                     platformNames.add("${membership.membershipType.getNameFromType()} (${membership.displayName})")

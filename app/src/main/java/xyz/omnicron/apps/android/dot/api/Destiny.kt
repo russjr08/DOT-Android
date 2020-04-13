@@ -156,8 +156,6 @@ class Destiny(ctx: Context): Interceptor {
                 if(response.isSuccessful) {
                     val resObject = response.body()
                     resObject.let { jsonRoot ->
-                        //TODO: Deserialize the information from the JSON Object,
-                        // to an array of DestinyMembership, and pass it back to the callback.
                         val responseRoot = jsonRoot?.getJSONObject("Response")
                         responseRoot?.let { responseRoot ->
                             val memberships = arrayListOf<DestinyMembership>()
