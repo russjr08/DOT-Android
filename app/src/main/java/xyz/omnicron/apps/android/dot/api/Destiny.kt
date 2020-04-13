@@ -2,9 +2,11 @@ package xyz.omnicron.apps.android.dot.api
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import io.reactivex.schedulers.Schedulers
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import org.json.JSONObject
 import retrofit.JSONConverterFactory
 import retrofit2.Call
 import retrofit2.Callback
@@ -13,11 +15,15 @@ import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import xyz.omnicron.apps.android.dot.api.interfaces.DestinyService
+import xyz.omnicron.apps.android.dot.api.interfaces.IApiResponseCallback
 import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
+import xyz.omnicron.apps.android.dot.api.models.DestinyMembership
 import xyz.omnicron.apps.android.dot.api.models.ManifestResponse
+import xyz.omnicron.apps.android.dot.api.models.MembershipType
 import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
 import java.util.*
 
+@Suppress("NAME_SHADOWING")
 class Destiny(ctx: Context): Interceptor {
 
     private val destinyApi: DestinyService
@@ -129,6 +135,53 @@ class Destiny(ctx: Context): Interceptor {
             }
 
         })
+    }
+
+
+    /**
+     * This function returns a list of available platforms the signed in user plays on
+     * (or rather, linked to the signed in Bungie.net profile)
+     */
+    fun getUserMemberships(callback: IApiResponseCallback<Array<DestinyMembership>>) {
+        val memberships = arrayListOf<DestinyMembership>()
+
+        val call = destinyApi.retrieveMemberships(prefs.getInt("bngMembershipId", 0))
+
+        call.enqueue(object: Callback<JSONObject> {
+            override fun onFailure(call: Call<JSONObject>, t: Throwable) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun onResponse(call: Call<JSONObject>, response: Response<JSONObject>) {
+                if(response.isSuccessful) {
+                    val resObject = response.body()
+                    resObject.let { jsonRoot ->
+                        //TODO: Deserialize the information from the JSON Object,
+                        // to an array of DestinyMembership, and pass it back to the callback.
+                        val responseRoot = jsonRoot?.getJSONObject("Response")
+                        responseRoot?.let { responseRoot ->
+                            val memberships = arrayListOf<DestinyMembership>()
+                            val membershipNodes = responseRoot.getJSONArray("destinyMemberships")
+                            for(i in 0 until membershipNodes.length()) {
+                                val membershipNode = membershipNodes[i] as JSONObject
+                                Log.d("DOT", membershipNode.toString())
+                                memberships.add(DestinyMembership(
+                                    displayName = membershipNode.getString("displayName"),
+                                    iconPath = membershipNode.getString("iconPath"),
+                                    membershipId = membershipNode.getString("membershipId").toLong(),
+                                    membershipType = MembershipType.from(membershipNode.getInt("membershipType"))
+                                ))
+                            }
+
+                            callback.onRequestSuccess(memberships.toTypedArray())
+                        }
+
+                    }
+                }
+            }
+
+        })
+
     }
 
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {

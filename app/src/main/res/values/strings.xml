@@ -18,6 +18,8 @@
     <string name="popup_manifest_download_failure_title">Database download failure!</string>
     <string name="popup_manifest_download_failure">Sorry, we were unable to download the latest game database from Bungie. The following error was presented: %e</string>
 
+    <string name="popup_platform_title">Which platform\'s data would you like to use?</string>
+
     <string name="title_activity_main">MainActivity</string>
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>

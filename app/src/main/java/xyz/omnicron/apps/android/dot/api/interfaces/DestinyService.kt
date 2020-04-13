@@ -1,10 +1,8 @@
 package xyz.omnicron.apps.android.dot.api.interfaces
 
+import org.json.JSONObject
 import retrofit2.Call
-import retrofit2.http.Field
-import retrofit2.http.FormUrlEncoded
-import retrofit2.http.GET
-import retrofit2.http.POST
+import retrofit2.http.*
 import xyz.omnicron.apps.android.dot.api.models.ManifestResponse
 import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
 
@@ -19,5 +17,8 @@ interface DestinyService {
 
     @GET("Destiny2/Manifest/")
     fun retrieveManifest(): Call<ManifestResponse>
+
+    @GET("User/GetMembershipsById/{membershipID}/-1/")
+    fun retrieveMemberships(@Path("membershipID") id: Int): Call<JSONObject>
 
 }
