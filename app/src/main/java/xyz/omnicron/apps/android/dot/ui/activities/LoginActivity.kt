@@ -67,6 +67,13 @@ class LoginActivity : AppCompatActivity(),
             LoginTask(this).execute(code)
         }
 
+        // If a login token is detected, skip requesting authorization.
+        preferences?.let {
+            if(it.contains("accessToken")) {
+                checkAndDownloadManifest()
+            }
+        }
+
     }
 
     private fun launchTab(context: Context, uri: Uri) {
