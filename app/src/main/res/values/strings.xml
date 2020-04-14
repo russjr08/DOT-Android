@@ -18,6 +18,12 @@
     <string name="popup_manifest_download_failure_title">Database download failure!</string>
     <string name="popup_manifest_download_failure">Sorry, we were unable to download the latest game database from Bungie. The following error was presented: %e</string>
 
+    <string name="popup_auth_expired_error_title">Whoops!</string>
+    <string name="popup_auth_expired_error_body">Looks like you have been logged out (%s),
+        you will now be returned to the login screen.\nGo ahead and give it another try after logging back in.</string>
+    <string name="popup_auth_expired_no_error">No error provided</string>
+    <string name="popup_auth_expired_button_title">Return to Login</string>
+
     <string name="popup_platform_title">Which platform\'s data would you like to use?</string>
 
     <string name="title_activity_main">MainActivity</string>

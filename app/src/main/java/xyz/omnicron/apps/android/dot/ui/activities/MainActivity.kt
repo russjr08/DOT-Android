@@ -1,6 +1,9 @@
 package xyz.omnicron.apps.android.dot.ui.activities
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -18,21 +21,32 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
+import io.reactivex.Completable
+import io.reactivex.Scheduler
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.view.*
 import org.koin.android.ext.android.inject
+import retrofit2.Call
+import retrofit2.Response
 import xyz.omnicron.apps.android.dot.App
 import xyz.omnicron.apps.android.dot.R
 import xyz.omnicron.apps.android.dot.api.Destiny
 import xyz.omnicron.apps.android.dot.api.interfaces.IApiResponseCallback
+import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
 import xyz.omnicron.apps.android.dot.api.models.BungieNetUser
 import xyz.omnicron.apps.android.dot.api.models.DestinyMembership
+import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
 import xyz.omnicron.apps.android.dot.database.DestinyDatabase
 import xyz.omnicron.apps.android.dot.databinding.ActivityMainBinding
 import xyz.omnicron.apps.android.dot.databinding.NavHeaderMainBinding
 import java.text.SimpleDateFormat
 import java.util.*
+import xyz.omnicron.apps.android.dot.DestinyAuthException
+import xyz.omnicron.apps.android.dot.DestinyException
+import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
 
@@ -45,9 +59,10 @@ class MainActivity : AppCompatActivity() {
 
     val BUNGIE_NET_BASE = "https://www.bungie.net"
 
-    val destiny: Destiny by inject()
+    private val destiny: Destiny by inject()
 
 
+    @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -76,49 +91,118 @@ class MainActivity : AppCompatActivity() {
 
         val destinyDatabase = DestinyDatabase(this, prefs.getString("manifestName", "").orEmpty())
 
-        if(!prefs.contains("membershipId")) {
-            promptForUserMembershipChoice()
-        }
+        checkLoginIsValid().andThen(promptForUserMembershipChoice()).subscribe({
+            // Start bounty retrieval loop
+            Snackbar.make(navView, "Checking for bounties...", Snackbar.LENGTH_INDEFINITE).show()
+
+        },
+        { error ->
+            if(error is DestinyAuthException) {
+                returnToLoginActivity(error)
+            } else {
+                // Show error snack bar
+                Snackbar.make(navView, "An error occurred trying to check for bounties, try a manual refresh", Snackbar.LENGTH_LONG).show()
+            }
+        })
+
+
 
         updateNavHeader()
 
     }
 
-    private fun promptForUserMembershipChoice() {
-        destiny.getUserMemberships(callback = object : IApiResponseCallback<Array<DestinyMembership>> {
-            override fun onRequestSuccess(data: Array<DestinyMembership>) {
+    private fun checkLoginIsValid(): Completable {
+        return Completable.create { subscriber ->
+            if(!destiny.isAccessValid()) {
+                if(destiny.isRefreshValid()) {
+                    destiny.refreshAccessToken(callback = object: IResponseReceiver<OAuthResponse> {
+                        override fun onNetworkTaskFinished(response: Response<OAuthResponse>, request: Call<OAuthResponse>) {
+                            subscriber.onComplete()
+                        }
 
-                if(data.size > 1) {
-                    prefs.edit().putLong("membershipId", data[0].membershipId).apply()
-                    prefs.edit().putInt("membershipType", data[0].membershipType.value).apply()
+                        override fun onNetworkFailure(request: Call<OAuthResponse>, error: Throwable) {
+                            if(error is DestinyException) {
+                                subscriber.onError(error)
+                            } else {
+                                subscriber.onError(Exception("A network error has occurred."))
+                            }
+                        }
+
+                    })
+                } else {
+                    subscriber.onError(DestinyAuthException("All tokens have expired."))
                 }
+            }
+            subscriber.onComplete()
+        }
+    }
 
-                val platformNames = arrayListOf<String>()
-                for(membership in data) {
-                    platformNames.add("${membership.membershipType.getNameFromType()} (${membership.displayName})")
-                }
+    @SuppressLint("ApplySharedPref")
+    @Suppress("NAME_SHADOWING")
+    private fun returnToLoginActivity(error: Throwable?) {
+        val listener = DialogInterface.OnClickListener { _, _ ->
+            prefs.edit().clear().commit()
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+        if(error?.message != null) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(resources.getString(R.string.popup_auth_expired_error_title))
+                .setMessage(resources.getString(R.string.popup_auth_expired_error_body).replace("%s".toRegex(), error.toString()))
+                .setPositiveButton(R.string.popup_auth_expired_button_title, listener)
+                .show()
+        } else {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(resources.getString(R.string.popup_auth_expired_error_title))
+                .setMessage(resources.getString(R.string.popup_auth_expired_error_body).replace("%s".toRegex(), resources.getString(R.string.popup_auth_expired_no_error)))
+                .setPositiveButton(R.string.popup_auth_expired_button_title, listener)
+                .show()
+        }
+    }
 
-                @Suppress("UNCHECKED_CAST")
-                MaterialAlertDialogBuilder(this@MainActivity)
-                    .setTitle(resources.getString(R.string.popup_platform_title))
-                    .setItems(platformNames.toTypedArray()) { _, which ->
-                        Log.d("DOT", "Platform Selection: ${data[which].membershipType}")
-                        prefs.edit().putLong("membershipId", data[which].membershipId)
-                        prefs.edit().putInt("membershipType", data[which].membershipType.value)
+    private fun promptForUserMembershipChoice(): Completable {
+        return Completable.create { subscriber ->
+            if(prefs.contains("membershipId")) {
+                subscriber.onComplete()
+            } else {
+                destiny.getUserMemberships(callback = object :
+                    IApiResponseCallback<Array<DestinyMembership>> {
+                    override fun onRequestSuccess(data: Array<DestinyMembership>) {
+
+                        if (data.size > 1) {
+                            prefs.edit().putLong("membershipId", data[0].membershipId).apply()
+                            prefs.edit().putInt("membershipType", data[0].membershipType.value)
+                                .apply()
+                            subscriber.onComplete()
+                            return
+                        }
+
+                        val platformNames = arrayListOf<String>()
+                        for (membership in data) {
+                            platformNames.add("${membership.membershipType.getNameFromType()} (${membership.displayName})")
+                        }
+
+                        @Suppress("UNCHECKED_CAST")
+                        MaterialAlertDialogBuilder(this@MainActivity)
+                            .setTitle(resources.getString(R.string.popup_platform_title))
+                            .setItems(platformNames.toTypedArray()) { _, which ->
+                                Log.d("DOT", "Platform Selection: ${data[which].membershipType}")
+                                prefs.edit().putLong("membershipId", data[which].membershipId)
+                                prefs.edit()
+                                    .putInt("membershipType", data[which].membershipType.value)
+                                subscriber.onComplete()
+                            }
+                            .show()
+
                     }
-                    .show()
 
+                    override fun onRequestFailed(error: Throwable) {
+                        subscriber.onError(error)
+                    }
+                })
             }
-
-            override fun onRequestFailed(error: Throwable) {
-                TODO("Not yet implemented")
-            }
-
-
-        })
-        
-        
-
+        }
     }
 
     private fun updateNavHeader() {
