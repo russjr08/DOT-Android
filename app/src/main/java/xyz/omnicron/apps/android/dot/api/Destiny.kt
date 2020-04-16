@@ -3,6 +3,8 @@ package xyz.omnicron.apps.android.dot.api
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.beust.klaxon.JsonObject
+import io.reactivex.Completable
 import io.reactivex.schedulers.Schedulers
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -14,6 +16,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
+import xyz.omnicron.apps.android.dot.DestinyParseException
 import xyz.omnicron.apps.android.dot.api.interfaces.DestinyService
 import xyz.omnicron.apps.android.dot.api.interfaces.IApiResponseCallback
 import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
@@ -28,6 +31,8 @@ class Destiny(ctx: Context): Interceptor {
     private val destinyApi: DestinyService
     private val prefs: SharedPreferences
 
+    lateinit var bungieNetUser: BungieNetUser
+    lateinit var destinyProfile: DestinyProfile
 
     init {
 
@@ -48,6 +53,14 @@ class Destiny(ctx: Context): Interceptor {
 
 
         prefs = ctx.getSharedPreferences("dot", Context.MODE_PRIVATE)
+    }
+
+    fun getSavedMembershipId(): String {
+        return prefs.getLong("membershipId", 0).toString()
+    }
+
+    fun getSavedMembershipType(): MembershipType {
+        return MembershipType.from(prefs.getInt("membershipType", -1))
     }
 
     fun retrieveTokens(code: String): Call<OAuthResponse> {
@@ -181,37 +194,96 @@ class Destiny(ctx: Context): Interceptor {
 
     }
 
-    fun getBungieNetUser(callback: IApiResponseCallback<BungieNetUser>) {
-        val call = destinyApi.retrieveMemberships(prefs.getInt("bngMembershipId", 0))
+    fun updateBungieUser(): Completable {
+        return Completable.create { subscriber ->
+            val call = destinyApi.retrieveMemberships(prefs.getInt("bngMembershipId", 0))
 
-        call.enqueue(object: Callback<JSONObject> {
-            override fun onFailure(call: Call<JSONObject>, t: Throwable) {
-                callback.onRequestFailed(t)
-            }
+            call.enqueue(object: Callback<JSONObject> {
+                override fun onFailure(call: Call<JSONObject>, t: Throwable) {
+                    subscriber.onError(t)
+                }
 
-            override fun onResponse(call: Call<JSONObject>, response: Response<JSONObject>) {
-                if(response.isSuccessful) {
-                    val responseObj = response.body()?.getJSONObject("Response")
-                    responseObj?.let { response ->
-                        val bungieNetUserNode = response.getJSONObject("bungieNetUser")
-                        bungieNetUserNode?.let { userNode ->
-                            val bungieNetUser = BungieNetUser(
-                                displayName = userNode.getString("displayName"),
-                                about = userNode.getString("about"),
-                                firstAccess = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(userNode.getString("firstAccess")),
-                                lastUpdate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(userNode.getString("lastUpdate")),
-                                membershipId = userNode.getLong("membershipId"),
-                                profilePicturePath = userNode.getString("profilePicturePath"),
-                                profileThemeName = userNode.getString("profileThemeName")
-                            )
+                override fun onResponse(call: Call<JSONObject>, response: Response<JSONObject>) {
+                    if(response.isSuccessful) {
+                        val responseObj = response.body()?.getJSONObject("Response")
+                        responseObj.let { response ->
+                            val bungieNetUserNode = response?.getJSONObject("bungieNetUser")
+                            bungieNetUserNode?.let { userNode ->
+                                val bungieNetUser = BungieNetUser(
+                                    displayName = userNode.getString("displayName"),
+                                    about = userNode.getString("about"),
+                                    firstAccess = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(userNode.getString("firstAccess")),
+                                    lastUpdate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(userNode.getString("lastUpdate")),
+                                    membershipId = userNode.getLong("membershipId"),
+                                    profilePicturePath = userNode.getString("profilePicturePath"),
+                                    profileThemeName = userNode.getString("profileThemeName")
+                                )
 
-                            callback.onRequestSuccess(bungieNetUser)
+                                this@Destiny.bungieNetUser = bungieNetUser
+                                subscriber.onComplete()
+                                return
+                            }
+                            subscriber.onError(DestinyParseException("The response from the API was unable to be parsed correctly."))
                         }
                     }
                 }
-            }
 
-        })
+            })
+        }
+
+    }
+
+    fun updateDestinyProfile(): Completable {
+        return Completable.create { subscriber ->
+            val call = destinyApi.retrieveProfile(getSavedMembershipType().value, getSavedMembershipId(),
+                listOf(100, 200))
+
+            call.enqueue(object: Callback<JSONObject> {
+                override fun onFailure(call: Call<JSONObject>, t: Throwable) {
+                    subscriber.onError(t)
+                }
+
+                override fun onResponse(call: Call<JSONObject>, response: Response<JSONObject>) {
+                    Log.d("DOT", response.body().toString())
+                    if(response.isSuccessful) {
+
+                        // Parse basic profile information
+                        val responseObj = response.body()!!.getJSONObject("Response")
+                        val profileObj = responseObj.getJSONObject("profile")
+                        val profileData = profileObj.getJSONObject("data")
+                        val userInfo = profileData.getJSONObject("userInfo")
+                        this@Destiny.destinyProfile = DestinyProfile(MembershipType.from(userInfo.getInt("membershipType")),
+                        userInfo.getString("membershipId"), userInfo.getString("displayName"))
+
+                        // After basic profile information has been updated, get basic character data
+                        val characterNode = responseObj.getJSONObject("characters")
+                        val characterData = characterNode.getJSONObject("data")
+                        for(characterId in characterData.keys()) {
+                            val characterObj = characterData[characterId] as JSONObject
+                            val character = DestinyCharacter(
+                                membershipId = characterObj.getString("membershipId"),
+                                membershipType = MembershipType.from(characterObj.getInt("membershipType")),
+                                characterId = characterObj.getString("characterId"),
+                                dateLastPlayed = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).parse(characterObj.getString("dateLastPlayed"))!!,
+                                light = characterObj.getInt("light"),
+                                emblemHash = characterObj.getLong("emblemHash"),
+                                emblemPath = characterObj.getString("emblemPath"),
+                                emblemBackgroundPath = characterObj.getString("emblemBackgroundPath"),
+                                race = DestinyRace.from(characterObj.getInt("raceType")),
+                                gender = DestinyGender.from(characterObj.getInt("genderType")),
+                                classType = DestinyClass.from(characterObj.getInt("classType"))
+                            )
+                            this@Destiny.destinyProfile.characters.add(character)
+                        }
+                        subscriber.onComplete()
+                    } else {
+                        subscriber.onError(DestinyParseException("The response from the API was unable to be parsed correctly."))
+                    }
+                }
+
+            })
+        }
+
     }
 
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {

@@ -19,7 +19,7 @@ enum class MembershipType(val value: Int) {
     }
 
     companion object {
-        fun from(findValue: Int): MembershipType = MembershipType.values().first { it.value == findValue }
+        fun from(findValue: Int): MembershipType = values().first { it.value == findValue }
     }
 }
 

@@ -35,7 +35,7 @@
     <string name="nav_header_title">Bungie User Name</string>
     <string name="nav_header_subtitle">Bungie User About</string>
     <string name="nav_header_lastUpdate">Last Updated at %s</string>
-    <string name="nav_header_firstAccess">Created at %s</string>
+    <string name="nav_header_firstAccess">Bungie user since %s</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 

@@ -8,3 +8,5 @@ interface DestinyException
  */
 class DestinyAuthException(val error: String): DestinyException, Throwable(error)
 
+class DestinyParseException(val error: String): DestinyException, Throwable(error)
+

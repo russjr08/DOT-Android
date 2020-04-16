@@ -5,9 +5,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -23,11 +20,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
-import com.squareup.picasso.Target
 import io.reactivex.Completable
-import io.reactivex.Scheduler
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_main.view.*
 import org.koin.android.ext.android.inject
 import retrofit2.Call
 import retrofit2.Response
@@ -36,7 +31,6 @@ import xyz.omnicron.apps.android.dot.R
 import xyz.omnicron.apps.android.dot.api.Destiny
 import xyz.omnicron.apps.android.dot.api.interfaces.IApiResponseCallback
 import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
-import xyz.omnicron.apps.android.dot.api.models.BungieNetUser
 import xyz.omnicron.apps.android.dot.api.models.DestinyMembership
 import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
 import xyz.omnicron.apps.android.dot.database.DestinyDatabase
@@ -46,6 +40,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import xyz.omnicron.apps.android.dot.DestinyAuthException
 import xyz.omnicron.apps.android.dot.DestinyException
+import xyz.omnicron.apps.android.dot.api.models.DestinyProfile
 import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
@@ -91,10 +86,8 @@ class MainActivity : AppCompatActivity() {
 
         val destinyDatabase = DestinyDatabase(this, prefs.getString("manifestName", "").orEmpty())
 
-        checkLoginIsValid().andThen(promptForUserMembershipChoice()).subscribe({
-            // Start bounty retrieval loop
-            Snackbar.make(navView, "Checking for bounties...", Snackbar.LENGTH_INDEFINITE).show()
-
+        checkLoginIsValid().andThen(promptForUserMembershipChoice()).andThen(destiny.updateDestinyProfile()).subscribe({
+            Snackbar.make(navView, "Initial update completed", Snackbar.LENGTH_LONG).show()
         },
         { error ->
             if(error is DestinyAuthException) {
@@ -205,35 +198,31 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("CheckResult")
     private fun updateNavHeader() {
-        destiny.getBungieNetUser(callback = object : IApiResponseCallback<BungieNetUser> {
-            override fun onRequestSuccess(data: BungieNetUser) {
-                runOnUiThread {
-                    navHeaderBinding.name.text = data.displayName
-                    navHeaderBinding.aboutText.text = data.about
+        destiny.updateBungieUser()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                navHeaderBinding.name.text = destiny.bungieNetUser.displayName
+                navHeaderBinding.aboutText.text = destiny.bungieNetUser.about
 
-                    val formatter = SimpleDateFormat("MM/dd/yy hh:mm a", Locale.US)
+                val formatter = SimpleDateFormat("MM/dd/yy hh:mm a", Locale.US)
 
-                    val creationDate = resources.getText(R.string.nav_header_firstAccess).replace(
-                        "%s".toRegex(), formatter.format(data.firstAccess!!))
-                    navHeaderBinding.creationDate.text = creationDate
-                    val lastUpdate = resources.getText(R.string.nav_header_lastUpdate).replace(
-                        "%s".toRegex(), formatter.format(data.lastUpdate!!))
-                    navHeaderBinding.lastUpdateDate.text = lastUpdate
+                val creationDate = resources.getText(R.string.nav_header_firstAccess).replace(
+                    "%s".toRegex(), formatter.format(destiny.bungieNetUser.firstAccess!!))
+                navHeaderBinding.creationDate.text = creationDate
+                val lastUpdate = resources.getText(R.string.nav_header_lastUpdate).replace(
+                    "%s".toRegex(), formatter.format(destiny.bungieNetUser.lastUpdate!!))
+                navHeaderBinding.lastUpdateDate.text = lastUpdate
 
-                    Picasso.with(this@MainActivity)
-                        .load(BUNGIE_NET_BASE + data.profilePicturePath)
-                        .noFade()
-                        .into(navHeaderBinding.imageView)
-
-                }
-            }
-
-            override fun onRequestFailed(error: Throwable) {
-                TODO("Not yet implemented")
-            }
-
-        })
+                Picasso.with(this@MainActivity)
+                    .load(BUNGIE_NET_BASE + destiny.bungieNetUser.profilePicturePath)
+                    .noFade()
+                    .into(navHeaderBinding.imageView)
+            }, {
+                TODO("Display an error to the user when the profile update was unsuccessful")
+            })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
