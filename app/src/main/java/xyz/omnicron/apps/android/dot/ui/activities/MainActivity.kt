@@ -23,6 +23,7 @@ import com.squareup.picasso.Picasso
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.android.ext.android.inject
 import retrofit2.Call
 import retrofit2.Response
@@ -84,10 +85,11 @@ class MainActivity : AppCompatActivity() {
 
         this.app = application as App
 
-        val destinyDatabase = DestinyDatabase(this, prefs.getString("manifestName", "").orEmpty())
+        destiny.database = DestinyDatabase(this, prefs.getString("manifestName", "").orEmpty())
 
         checkLoginIsValid().andThen(promptForUserMembershipChoice()).andThen(destiny.updateDestinyProfile()).subscribe({
             Snackbar.make(navView, "Initial update completed", Snackbar.LENGTH_LONG).show()
+            startUpdateLoop()
         },
         { error ->
             if(error is DestinyAuthException) {
@@ -102,6 +104,15 @@ class MainActivity : AppCompatActivity() {
 
         updateNavHeader()
 
+    }
+
+    private fun startUpdateLoop() {
+        Snackbar.make(nav_view, "Retrieving Pursuits", Snackbar.LENGTH_LONG).show()
+        destiny.destinyProfile.characters.forEach { character ->
+            character.updatePursuits(destiny).observeOn(Schedulers.io()).subscribeOn(AndroidSchedulers.mainThread()).subscribe {
+                Snackbar.make(nav_view, "Finished updating ${character.classType.getNameFromType()}", Snackbar.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun checkLoginIsValid(): Completable {

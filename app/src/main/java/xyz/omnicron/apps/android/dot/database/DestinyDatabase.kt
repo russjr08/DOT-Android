@@ -24,6 +24,7 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
 
     }
 
+    // @TODO Convert to RX (ensure not running on main thread)
     /**
      * This function attempts to lookup an item in the Destiny manifest, given the table name,
      * and the item's hash/id.
@@ -63,7 +64,7 @@ class DestinyDatabaseCache {
 
 class DestinyDatabaseItem(
     var displayProperties: DisplayProperties,
-    var hash: Int,
+    var hash: Long,
     var redacted: Boolean,
     var itemTypeDisplayName: String,
     var itemTypeAndTierDisplayName: String
@@ -74,5 +75,8 @@ class DisplayProperties(
     var icon: String,
     var name: String,
     var hasIcon: Boolean
-
-)
+) {
+    override fun toString(): String {
+        return "DisplayProperty: $name // $description"
+    }
+}

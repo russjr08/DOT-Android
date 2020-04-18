@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.beust.klaxon.JsonObject
 import io.reactivex.Completable
+import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -21,6 +22,7 @@ import xyz.omnicron.apps.android.dot.api.interfaces.DestinyService
 import xyz.omnicron.apps.android.dot.api.interfaces.IApiResponseCallback
 import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
 import xyz.omnicron.apps.android.dot.api.models.*
+import xyz.omnicron.apps.android.dot.database.DestinyDatabase
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -33,6 +35,7 @@ class Destiny(ctx: Context): Interceptor {
 
     lateinit var bungieNetUser: BungieNetUser
     lateinit var destinyProfile: DestinyProfile
+    lateinit var database: DestinyDatabase
 
     init {
 
@@ -284,6 +287,30 @@ class Destiny(ctx: Context): Interceptor {
             })
         }
 
+    }
+
+    fun retrieveCharacterData(characterId: String, components: List<Int>): Observable<JSONObject> {
+        return Observable.create { emitter ->
+            val call = destinyApi.retrieveCharacter(getSavedMembershipType().value,
+                getSavedMembershipId(), characterId, components)
+
+            call.enqueue(object: Callback<JSONObject> {
+                override fun onFailure(call: Call<JSONObject>, t: Throwable) {
+                    emitter.onError(t)
+                }
+
+                override fun onResponse(call: Call<JSONObject>, response: Response<JSONObject>) {
+                    if(response.isSuccessful) {
+                        val responseObj = (response.body() as JSONObject).getJSONObject("Response")
+                        emitter.onNext(responseObj)
+                        emitter.onComplete()
+                    } else {
+                        emitter.onError(DestinyParseException("The response from the API was unable to be parsed correctly."))
+                    }
+                }
+
+            })
+        }
     }
 
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
