@@ -95,7 +95,9 @@ class LoginActivity : AppCompatActivity(),
 
             override fun onServiceDisconnected(name: ComponentName) {}
         }
-        CustomTabsClient.bindCustomTabsService(context, "com.android.chrome", tabConnection)
+        CustomTabsClient.bindCustomTabsService(context, "com.android.chrome",
+            tabConnection as CustomTabsServiceConnection
+        )
     }
 
     override fun onDestroy() {
