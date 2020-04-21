@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="fab_warlock" type="id" />
+    <item name="fab_hunter" type="id" />
+    <item name="fab_titan" type="id" />
+</resources>
