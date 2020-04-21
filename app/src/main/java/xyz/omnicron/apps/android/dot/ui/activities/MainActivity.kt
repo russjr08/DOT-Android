@@ -19,6 +19,8 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
+import com.leinardi.android.speeddial.SpeedDialActionItem
+import com.leinardi.android.speeddial.SpeedDialView
 import com.squareup.picasso.Picasso
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -41,7 +43,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import xyz.omnicron.apps.android.dot.DestinyAuthException
 import xyz.omnicron.apps.android.dot.DestinyException
-import xyz.omnicron.apps.android.dot.api.models.DestinyProfile
+import xyz.omnicron.apps.android.dot.api.models.DestinyClass
 import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
@@ -52,6 +54,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var navHeaderBinding: NavHeaderMainBinding
+
+    private lateinit var characterFab: SpeedDialView
+
+    private lateinit var selectedCharacterId: String
 
     val BUNGIE_NET_BASE = "https://www.bungie.net"
 
@@ -67,6 +73,8 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         navHeaderBinding = NavHeaderMainBinding.bind(binding.navView.getHeaderView(0))
 
+        characterFab = binding.mainActivityAppBar.mainActivityContent.fabCharacterSelection
+        setOnCharacterSelect()
 
         prefs = getSharedPreferences("dot", Context.MODE_PRIVATE)
 
@@ -89,6 +97,7 @@ class MainActivity : AppCompatActivity() {
 
         checkLoginIsValid().andThen(promptForUserMembershipChoice()).andThen(destiny.updateDestinyProfile()).subscribe({
             Snackbar.make(navView, "Initial update completed", Snackbar.LENGTH_LONG).show()
+            setSelectedCharacter(destiny.destinyProfile.getLastPlayedCharacterId())
             startUpdateLoop()
         },
         { error ->
@@ -107,12 +116,93 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startUpdateLoop() {
-        Snackbar.make(nav_view, "Retrieving Pursuits", Snackbar.LENGTH_LONG).show()
+        // TODO - Show refresh icon
         destiny.destinyProfile.characters.forEach { character ->
             character.updatePursuits(destiny).observeOn(Schedulers.io()).subscribeOn(AndroidSchedulers.mainThread()).subscribe {
                 Snackbar.make(nav_view, "Finished updating ${character.classType.getNameFromType()}", Snackbar.LENGTH_LONG).show()
             }
         }
+    }
+
+    private fun setOnCharacterSelect() {
+        characterFab.setOnActionSelectedListener(SpeedDialView.OnActionSelectedListener { actionItem ->
+            when (actionItem.id) {
+                R.id.fab_warlock -> {
+                    setSelectedCharacter(destiny.destinyProfile.characters.stream().filter{ character -> character.classType == DestinyClass.WARLOCK }.findFirst().get().characterId)
+                    characterFab.close() // To close the Speed Dial with animation
+                    return@OnActionSelectedListener true // false will close it without animation
+                }
+                R.id.fab_hunter -> {
+                    setSelectedCharacter(destiny.destinyProfile.characters.stream().filter{ character -> character.classType == DestinyClass.HUNTER }.findFirst().get().characterId)
+                    characterFab.close()
+                    return@OnActionSelectedListener true
+                }
+                R.id.fab_titan -> {
+                    setSelectedCharacter(destiny.destinyProfile.characters.stream().filter{ character -> character.classType == DestinyClass.TITAN }.findFirst().get().characterId)
+                    characterFab.close()
+                    return@OnActionSelectedListener true
+                }
+            }
+            false
+        })
+    }
+
+    private fun setSelectedCharacter(id: String) {
+        selectedCharacterId = id
+        val character = destiny.destinyProfile.getCharacterById(id)
+        Snackbar.make(nav_view, "Selected ${character.classType.getNameFromType()}", Snackbar.LENGTH_SHORT).show()
+
+
+        characterFab.clearActionItems()
+
+        characterFab.setMainFabOpenedDrawable(resources.getDrawable(getResourceIdForClass(destiny.destinyProfile.getCharacterById(selectedCharacterId).classType), null))
+        characterFab.setMainFabClosedDrawable(resources.getDrawable(getResourceIdForClass(destiny.destinyProfile.getCharacterById(selectedCharacterId).classType), null))
+
+        val actionItems = arrayListOf<SpeedDialActionItem>()
+        val selectedCharacterType = character.classType
+
+        for(type in DestinyClass.values()) {
+            when(type) {
+                DestinyClass.TITAN -> {
+                    if(selectedCharacterType != DestinyClass.TITAN) {
+                        actionItems.add(SpeedDialActionItem.Builder(
+                            R.id.fab_titan, getResourceIdForClass(DestinyClass.TITAN))
+                            .setLabel("Titan")
+                            .setFabBackgroundColor(resources.getColor(R.color.design_default_color_background, null))
+                            .create()
+                        )
+                    }
+                }
+
+                DestinyClass.HUNTER -> {
+                    if(selectedCharacterType != DestinyClass.HUNTER) {
+                        actionItems.add(SpeedDialActionItem.Builder(
+                            R.id.fab_hunter, getResourceIdForClass(DestinyClass.HUNTER))
+                            .setLabel("Hunter")
+                            .setFabBackgroundColor(resources.getColor(R.color.design_default_color_background, null))
+                            .create()
+                        )
+                    }
+
+                }
+
+                DestinyClass.WARLOCK -> {
+                    if(selectedCharacterType != DestinyClass.WARLOCK) {
+                        actionItems.add(SpeedDialActionItem.Builder(
+                            R.id.fab_warlock, getResourceIdForClass(DestinyClass.WARLOCK))
+                            .setLabel("Warlock")
+                            .setFabBackgroundColor(resources.getColor(R.color.design_default_color_background, null))
+                            .create()
+                        )
+                    }
+
+                }
+            }
+        }
+
+        characterFab.addAllActionItems(actionItems)
+
+
     }
 
     private fun checkLoginIsValid(): Completable {
@@ -206,6 +296,14 @@ class MainActivity : AppCompatActivity() {
                     }
                 })
             }
+        }
+    }
+
+    private fun getResourceIdForClass(classType: DestinyClass): Int {
+        return when(classType) {
+            DestinyClass.WARLOCK -> R.drawable.ic_warlock_symbol_original
+            DestinyClass.HUNTER -> R.drawable.ic_hunter_symbol_original
+            DestinyClass.TITAN -> R.drawable.ic_titan_symbol_original
         }
     }
 

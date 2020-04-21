@@ -1,6 +1,5 @@
 package xyz.omnicron.apps.android.dot.api.models
 
-import il.co.theblitz.observablecollections.lists.ObservableArrayList
 import io.reactivex.Completable
 import io.reactivex.schedulers.Schedulers
 import org.json.JSONArray
