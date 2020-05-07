@@ -40,5 +40,8 @@
     <string name="action_settings">Settings</string>
 
     <string name="menu_pursuits">Pursuits</string>
+    <string name="pursuit_title_placeholder">Pursuit Title</string>
+    <string name="pursuit_type_placeholder">Pursuit Type Placeholder</string>
+    <string name="pursuitDescriptionPlaceholder">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Bibendum enim facilisis gravida neque convallis a cras. Commodo quis imperdiet massa tincidunt nunc pulvinar. Quis eleifend quam adipiscing vitae proin sagittis nisl rhoncus. Pretium quam vulputate dignissim suspendisse in est ante.</string>
 
 </resources>

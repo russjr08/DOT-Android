@@ -8,4 +8,9 @@
   <color name="colorAccent">#5f4339</color>
   <color name="primaryTextColor">#ffffff</color>
   <color name="secondaryTextColor">#ffffff</color>
+
+  <color name="pursuit_legendary_background">#513065</color>
+  <color name="pursuit_exotic_background">#CEAE33</color>
+  <color name="pursuit_rare_background">#5076A3</color>
+  <color name="pursuitBackground">#242121</color>
 </resources>
