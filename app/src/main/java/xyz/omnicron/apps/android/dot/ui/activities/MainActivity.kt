@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity() {
         destiny.database = DestinyDatabase(this, prefs.getString("manifestName", "").orEmpty())
 
         checkLoginIsValid().andThen(promptForUserMembershipChoice()).andThen(destiny.updateDestinyProfile()).subscribe({
-            Snackbar.make(navView, "Initial update completed", Snackbar.LENGTH_LONG).show()
+            Snackbar.make(navView, "Initial profile update completed; Looking for Pursuits...", Snackbar.LENGTH_LONG).show()
         },
         { error ->
             if(error is DestinyAuthException) {

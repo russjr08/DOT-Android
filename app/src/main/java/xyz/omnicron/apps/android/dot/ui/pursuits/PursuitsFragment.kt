@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.snackbar.Snackbar
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import com.leinardi.android.speeddial.SpeedDialView
@@ -32,6 +33,8 @@ class PursuitsFragment : Fragment() {
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var pursuitsAdapter: PursuitsAdapter
 
+    private lateinit var swipeContainer: SwipeRefreshLayout
+
     companion object {
         fun newInstance() = PursuitsFragment()
     }
@@ -46,16 +49,21 @@ class PursuitsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         characterFab = view.findViewById(R.id.fab_character_selection)
 
+        swipeContainer = view.findViewById(R.id.swipeContainer)
+
         linearLayoutManager = LinearLayoutManager(activity)
         pursuitsContainer.layoutManager = linearLayoutManager
         pursuitsAdapter = PursuitsAdapter()
         pursuitsContainer.adapter = pursuitsAdapter
 
+        swipeContainer.setProgressViewOffset(false, 0, 150)
+        swipeContainer.setOnRefreshListener { refreshCharacters() }
+
         destiny.updateDestinyProfile().subscribe({
             setSelectedCharacter(destiny.destinyProfile.getLastPlayedCharacterId())
             setOnCharacterSelect()
 
-            startUpdateLoop()
+            refreshCharacters()
         },
         { _ ->
             Snackbar.make(pursuitsFrameLayout, "An error occurred trying to check for bounties, try a manual refresh", Snackbar.LENGTH_LONG).show()
@@ -70,8 +78,9 @@ class PursuitsFragment : Fragment() {
         // TODO: Use the ViewModel
     }
 
-    private fun startUpdateLoop() {
+    private fun refreshCharacters() {
         // TODO - Show refresh icon
+        swipeContainer.isRefreshing = true
         destiny.destinyProfile.characters.forEach { character ->
             character.updatePursuits(destiny).observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io()).subscribe {
@@ -79,6 +88,7 @@ class PursuitsFragment : Fragment() {
                     if(character.characterId == selectedCharacterId) {
                         pursuitsAdapter.setPursuitsList(character.pursuits)
                         pursuitsAdapter.notifyDataSetChanged()
+                        swipeContainer.isRefreshing = false
                     }
                 }
         }

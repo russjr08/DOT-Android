@@ -7,14 +7,23 @@
     android:layout_height="match_parent"
     tools:context=".ui.pursuits.PursuitsFragment">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/pursuitsContainer"
-        android:scrollbars="vertical"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:paddingTop="?attr/actionBarSize"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:layout_width="match_parent"
+        android:id="@+id/swipeContainer"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_width="match_parent"
+        tools:ignore="MissingConstraints">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/pursuitsContainer"
+            android:scrollbars="vertical"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
 
     <com.leinardi.android.speeddial.SpeedDialView
         android:id="@+id/fab_character_selection"
