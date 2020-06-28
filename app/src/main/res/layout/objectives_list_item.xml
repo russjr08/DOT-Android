@@ -3,8 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:android="http://schemas.android.com/apk/res/android"
     tools:background="@color/pursuitBackground"
+    android:tag="objectives_item"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <LinearLayout
@@ -17,13 +18,15 @@
             tools:checked="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
+
         <TextView
-            android:text="@+id/objective_text"
+            android:id="@+id/objective_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/primaryTextColor"
             android:layout_marginBottom="10dp"
-            tools:text="Example Objective Progress Goes Here" />
+            tools:text="Example Objective Progress Goes Here"/>
+
     </LinearLayout>
 
 

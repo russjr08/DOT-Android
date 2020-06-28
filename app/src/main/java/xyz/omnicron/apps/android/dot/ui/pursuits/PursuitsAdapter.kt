@@ -60,7 +60,7 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
                 val adapter = ObjectivesAdapter()
                 this.adapter = adapter
                 adapter.setObjectivesList(pursuit.objectives)
-//                adapter.notifyDataSetChanged()
+                adapter.notifyDataSetChanged()
             }
 
         }
