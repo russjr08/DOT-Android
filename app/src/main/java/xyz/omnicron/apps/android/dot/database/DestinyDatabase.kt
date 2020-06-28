@@ -40,7 +40,8 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
         // Database lookups are expensive. If the item has already been looked up and cached,
         // return the entry from cache instead.
         if(DestinyDatabaseCache.itemCache.containsKey(hash)) {
-            return DestinyDatabaseCache.itemCache.get(hash)
+            cursor.close()
+            return DestinyDatabaseCache.itemCache[hash]
         }
 
         if(cursor.moveToFirst()) {
@@ -49,6 +50,7 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
             // Cache the item since it was not previously cached
             item?.let { DestinyDatabaseCache.itemCache.put(hash, it) }
             this.logger.log(Level.INFO, "Added an entry into database cache: ${item?.displayProperties?.name}")
+            cursor.close()
             return item
         }
 
@@ -61,7 +63,8 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
         // Database lookups are expensive. If the item has already been looked up and cached,
         // return the entry from cache instead.
         if(DestinyDatabaseCache.objectivesCache.containsKey(hash)) {
-            return DestinyDatabaseCache.objectivesCache.get(hash)
+            cursor.close()
+            return DestinyDatabaseCache.objectivesCache[hash]
         }
 
         if(cursor.moveToFirst()) {
@@ -70,6 +73,7 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
             // Cache the item since it was not previously cached
             item?.let { DestinyDatabaseCache.objectivesCache.put(hash, it) }
             this.logger.log(Level.INFO, "Added an objective into database cache: ${item?.progressDescription}")
+            cursor.close()
             return item
         }
 
