@@ -64,9 +64,21 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
                     pursuitTitleText.setTextColor(Color.parseColor("#000000"))
                     pursuitTypeText.setTextColor(Color.parseColor("#000000"))
                 }
-                "Rare" -> pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_rare_background))
-                "Legendary" -> pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_legendary_background))
-                "Exotic" -> pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_exotic_background))
+                "Rare" -> {
+                    pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_rare_background))
+                    pursuitTitleText.setTextColor(Color.parseColor("#FFFFFF"))
+                    pursuitTypeText.setTextColor(Color.parseColor("#FFFFFF"))
+                }
+                "Legendary" -> {
+                    pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_legendary_background))
+                    pursuitTitleText.setTextColor(Color.parseColor("#FFFFFF"))
+                    pursuitTypeText.setTextColor(Color.parseColor("#FFFFFF"))
+                }
+                "Exotic" -> {
+                    pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_exotic_background))
+                    pursuitTitleText.setTextColor(Color.parseColor("#FFFFFF"))
+                    pursuitTypeText.setTextColor(Color.parseColor("#FFFFFF"))
+                }
             }
 
             val layoutManager = LinearLayoutManager(ctx, RecyclerView.VERTICAL, false)
