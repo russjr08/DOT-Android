@@ -1,6 +1,7 @@
 package xyz.omnicron.apps.android.dot.api.models
 
 import xyz.omnicron.apps.android.dot.database.DestinyDatabaseItem
+import xyz.omnicron.apps.android.dot.database.DestinyDatabaseObjective
 import java.util.*
 
 open class DestinyItem(var databaseItem: DestinyDatabaseItem,
@@ -23,4 +24,4 @@ class DestinyPursuit(databaseItem: DestinyDatabaseItem,
 
 }
 
-data class DestinyObjectiveData(var objectiveHash: Int, var progress: Int, var completionValue: Int, var complete: Boolean, val visible: Boolean)
+data class DestinyObjectiveData(var objectiveDefinition: DestinyDatabaseObjective, var progress: Int, var complete: Boolean, val visible: Boolean)

@@ -139,7 +139,7 @@ class LoginActivity : AppCompatActivity(),
         // Refresh Token
         preferences?.edit()?.putString("refreshToken", response.refreshToken)?.apply()
         val refreshExpiresIn = Date()
-        refreshExpiresIn.time = refreshExpiresIn.time + (3600 * 1000)
+        refreshExpiresIn.time = refreshExpiresIn.time + (7776000L * 1000L)
         preferences?.edit()?.putLong("refreshTokenExpires", refreshExpiresIn.time)?.apply()
 
         preferences?.edit()?.putInt("bngMembershipId", response.bngMembershipId)?.apply()

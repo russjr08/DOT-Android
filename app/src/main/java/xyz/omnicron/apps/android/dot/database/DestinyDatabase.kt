@@ -39,16 +39,38 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
 
         // Database lookups are expensive. If the item has already been looked up and cached,
         // return the entry from cache instead.
-        if(DestinyDatabaseCache.cache.containsKey(hash)) {
-            return DestinyDatabaseCache.cache.get(hash)
+        if(DestinyDatabaseCache.itemCache.containsKey(hash)) {
+            return DestinyDatabaseCache.itemCache.get(hash)
         }
 
         if(cursor.moveToFirst()) {
             val item = Klaxon().parse<DestinyDatabaseItem>(cursor.getString(1))
 
             // Cache the item since it was not previously cached
-            item?.let { DestinyDatabaseCache.cache.put(hash, it) }
+            item?.let { DestinyDatabaseCache.itemCache.put(hash, it) }
             this.logger.log(Level.INFO, "Added an entry into database cache: ${item?.displayProperties?.name}")
+            return item
+        }
+
+        return null
+    }
+
+    fun getDestinyDatabaseObjectiveFromHash(hash: Int, table: String): DestinyDatabaseObjective? {
+        val cursor = this.openDatabase().rawQuery("SELECT * FROM ${table} WHERE id + 4294967296 = ${hash} OR id = ${hash}", null)
+
+        // Database lookups are expensive. If the item has already been looked up and cached,
+        // return the entry from cache instead.
+        if(DestinyDatabaseCache.objectivesCache.containsKey(hash)) {
+            return DestinyDatabaseCache.objectivesCache.get(hash)
+        }
+
+        if(cursor.moveToFirst()) {
+            val item = Klaxon().parse<DestinyDatabaseObjective>(cursor.getString(1))
+
+            // Cache the item since it was not previously cached
+            item?.let { DestinyDatabaseCache.objectivesCache.put(hash, it) }
+            this.logger.log(Level.INFO, "Added an objective into database cache: ${item?.progressDescription}")
+            return item
         }
 
         return null
@@ -58,7 +80,8 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
 
 class DestinyDatabaseCache {
     companion object {
-        var cache: HashMap<Int, DestinyDatabaseItem> = HashMap()
+        var itemCache: HashMap<Int, DestinyDatabaseItem> = HashMap()
+        var objectivesCache: HashMap<Int, DestinyDatabaseObjective> = HashMap()
     }
 }
 
@@ -70,11 +93,19 @@ class DestinyDatabaseItem(
     var itemTypeAndTierDisplayName: String
 )
 
+class DestinyDatabaseObjective(
+    var hash: Long,
+    var redacted: Boolean,
+    var completionValue: Int,
+    var showValueOnComplete: Boolean,
+    var progressDescription: String
+)
+
+
 class DisplayProperties(
-    var description: String,
-    var icon: String,
-    var name: String,
-    var hasIcon: Boolean
+    var description: String? = "",
+    var icon: String? = "",
+    var name: String? = ""
 ) {
     override fun toString(): String {
         return "DisplayProperty: $name // $description"

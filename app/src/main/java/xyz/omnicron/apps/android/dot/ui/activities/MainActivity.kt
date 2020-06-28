@@ -41,6 +41,7 @@ import xyz.omnicron.apps.android.dot.databinding.NavHeaderMainBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
@@ -96,6 +97,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 // Show error snack bar
                 Snackbar.make(navView, "An error occurred trying to check for bounties, try a manual refresh", Snackbar.LENGTH_LONG).show()
+                Log.e("DOT Authentication", error.toString())
             }
         })
 

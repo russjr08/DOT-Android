@@ -2,12 +2,10 @@ package xyz.omnicron.apps.android.dot.api.models
 
 import io.reactivex.Completable
 import io.reactivex.schedulers.Schedulers
-import org.json.JSONArray
 import org.json.JSONObject
 import xyz.omnicron.apps.android.dot.api.Destiny
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class DestinyCharacter(var membershipId: String,
                        var membershipType: MembershipType,
@@ -76,13 +74,16 @@ class DestinyCharacter(var membershipId: String,
                         }
                         for(i in 0 until objectivesArray.length()) {
                             val objectiveNode = objectivesArray[i] as JSONObject
-                            this.pursuits[position].objectives.add(DestinyObjectiveData(
-                                objectiveHash = objectiveNode.getInt("objectiveHash"),
-                                progress = objectiveNode.getInt("progress"),
-                                completionValue = objectiveNode.getInt("completionValue"),
-                                complete = objectiveNode.getBoolean("complete"),
-                                visible = objectiveNode.getBoolean("visible")
-                            ))
+                            val objectiveDefinition = destinyApi.database.getDestinyDatabaseObjectiveFromHash(objectiveNode.getInt("objectiveHash"), "DestinyObjectiveDefinition")
+                            if(objectiveDefinition != null) {
+                                this.pursuits[position].objectives.add(DestinyObjectiveData(
+                                    objectiveDefinition = objectiveDefinition,
+                                    progress = objectiveNode.getInt("progress"),
+                                    complete = objectiveNode.getBoolean("complete"),
+                                    visible = objectiveNode.getBoolean("visible")
+                                ))
+                            }
+
                         }
                     }
                     subscriber.onComplete()
