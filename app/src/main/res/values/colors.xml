@@ -12,5 +12,6 @@
   <color name="pursuit_legendary_background">#513065</color>
   <color name="pursuit_exotic_background">#CEAE33</color>
   <color name="pursuit_rare_background">#5076A3</color>
+  <color name="pursuit_common_background">#DCDCDC</color>
   <color name="pursuitBackground">#242121</color>
 </resources>

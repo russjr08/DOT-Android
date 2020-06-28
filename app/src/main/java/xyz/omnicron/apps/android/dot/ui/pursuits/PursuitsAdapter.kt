@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -49,10 +50,19 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
             val pursuitDescriptionText: TextView = this.itemView.findViewById(R.id.pursuitDescriptionText)
             val pursuitTypeText: TextView = this.itemView.findViewById(R.id.pursuitTypeText)
             val objectivesRecyclerView: RecyclerView = this.itemView.findViewById(R.id.objectivesHolder)
+            val pursuitHeader: LinearLayout = this.itemView.findViewById(R.id.pursuitHeader)
 
             pursuitTitleText.text = pursuit.databaseItem.displayProperties.name
             pursuitDescriptionText.text = pursuit.databaseItem.displayProperties.description
             pursuitTypeText.text = pursuit.databaseItem.itemTypeAndTierDisplayName
+
+            val typeAndTierBreakdown = pursuit.databaseItem.itemTypeAndTierDisplayName.split(" ")
+            when(typeAndTierBreakdown[0]) {
+                "Common" -> pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_common_background))
+                "Rare" -> pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_rare_background))
+                "Legendary" -> pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_legendary_background))
+                "Exotic" -> pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_exotic_background))
+            }
 
             val layoutManager = LinearLayoutManager(ctx, RecyclerView.VERTICAL, false)
             objectivesRecyclerView.apply {
