@@ -1,6 +1,7 @@
 package xyz.omnicron.apps.android.dot.ui.pursuits
 
 import android.content.Context
+import android.graphics.Color
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -58,7 +59,11 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
 
             val typeAndTierBreakdown = pursuit.databaseItem.itemTypeAndTierDisplayName.split(" ")
             when(typeAndTierBreakdown[0]) {
-                "Common" -> pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_common_background))
+                "Common" -> {
+                    pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_common_background))
+                    pursuitTitleText.setTextColor(Color.parseColor("#000000"))
+                    pursuitTypeText.setTextColor(Color.parseColor("#000000"))
+                }
                 "Rare" -> pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_rare_background))
                 "Legendary" -> pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_legendary_background))
                 "Exotic" -> pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_exotic_background))
