@@ -9,10 +9,13 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import org.joda.time.LocalDateTime
+import org.joda.time.Period
 import xyz.omnicron.apps.android.dot.R
 import xyz.omnicron.apps.android.dot.api.models.DestinyPursuit
 import xyz.omnicron.apps.android.dot.inflate
 import xyz.omnicron.apps.android.dot.ui.objectives.ObjectivesAdapter
+import java.util.*
 
 class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
 
@@ -45,6 +48,43 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
             Log.d("DOT PursuitsContainer", "Pursuit item clicked!")
         }
 
+        /**
+         * Converts the input to a plural term if quantity == 1, or quantity > 1
+         * Example: If the word is 'day' and the quantity is 2, then it will return 'days'
+         *          If the quantity is 1, then it will return 'day'
+         */
+        fun pluralize(quantity: Int, word: String): String {
+            if(quantity == 1) {
+                return word
+            } else {
+                return word + 's'
+            }
+        }
+
+        fun applyExpirationLabel(pursuit: DestinyPursuit, expirationText: TextView) {
+            val expirationStrBuilder = StringBuilder()
+            val now = LocalDateTime.now()
+            val expirationDate = LocalDateTime(pursuit.expirationDate)
+            if(now < expirationDate) {
+                expirationStrBuilder.append("Expires In: ")
+                val diff = Period(now, expirationDate)
+                if(diff.days > 0) {
+                    expirationStrBuilder.append("${diff.days} ${pluralize(diff.days, "day")} ")
+                }
+                if(diff.hours > 0) {
+                    expirationStrBuilder.append("${diff.hours} ${pluralize(diff.hours, "hour")} ")
+                }
+                if(diff.minutes > 0) {
+                    expirationStrBuilder.append("${diff.minutes} ${pluralize(diff.minutes, "minute")}")
+                }
+
+            } else {
+                expirationStrBuilder.append("Expired!")
+            }
+
+            expirationText.text = expirationStrBuilder.toString()
+        }
+
         fun bindPursuit(pursuit: DestinyPursuit, ctx: Context) {
             // Initialize layout with properties
             val pursuitTitleText: TextView = this.itemView.findViewById(R.id.pursuitTitleText)
@@ -52,10 +92,19 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
             val pursuitTypeText: TextView = this.itemView.findViewById(R.id.pursuitTypeText)
             val objectivesRecyclerView: RecyclerView = this.itemView.findViewById(R.id.objectivesHolder)
             val pursuitHeader: LinearLayout = this.itemView.findViewById(R.id.pursuitHeader)
+            val expirationText: TextView = this.itemView.findViewById(R.id.expiration_label)
 
             pursuitTitleText.text = pursuit.databaseItem.displayProperties.name
             pursuitDescriptionText.text = pursuit.databaseItem.displayProperties.description
             pursuitTypeText.text = pursuit.databaseItem.itemTypeAndTierDisplayName
+
+            // Expiration display handling
+            if(pursuit.expirationDate != null) {
+                applyExpirationLabel(pursuit, expirationText)
+                expirationText.visibility = View.VISIBLE
+            } else {
+                expirationText.visibility = View.GONE
+            }
 
             val typeAndTierBreakdown = pursuit.databaseItem.itemTypeAndTierDisplayName.split(" ")
             when(typeAndTierBreakdown[0]) {
