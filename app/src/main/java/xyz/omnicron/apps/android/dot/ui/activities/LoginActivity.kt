@@ -18,6 +18,7 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.customview.customView
 import com.downloader.*
 import kotlinx.android.synthetic.main.activity_login.*
+import org.joda.time.LocalDateTime
 import org.koin.android.ext.android.inject
 import org.koin.core.KoinComponent
 import org.koin.core.inject
@@ -29,7 +30,6 @@ import xyz.omnicron.apps.android.dot.api.Destiny
 import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
 import xyz.omnicron.apps.android.dot.api.models.ManifestResponse
 import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
-import java.util.*
 import java.util.logging.Logger
 import kotlin.math.ceil
 
@@ -130,17 +130,21 @@ class LoginActivity : AppCompatActivity(),
     override fun onLoginFinished(response: OAuthResponse) {
         Logger.getLogger("DOT").info(response.toString())
 
+        /** Access + Refresh tokens come with an "expiresIn", which is the amount of time in seconds
+         * after it was obtained.
+         */
+
         // Access Token
         preferences?.edit()?.putString("accessToken", response.accessToken)?.apply()
-        val accessExpiresIn = Date()
-        accessExpiresIn.time = accessExpiresIn.time + (3600 * 1000)
-        preferences?.edit()?.putLong("accessTokenExpires", accessExpiresIn.time)?.apply()
+        var accessExpiresIn = LocalDateTime.now()
+        accessExpiresIn = accessExpiresIn.plusSeconds(3600)
+        preferences?.edit()?.putString("accessTokenExpires", accessExpiresIn.toString())?.apply()
         
         // Refresh Token
         preferences?.edit()?.putString("refreshToken", response.refreshToken)?.apply()
-        val refreshExpiresIn = Date()
-        refreshExpiresIn.time = refreshExpiresIn.time + (7776000L * 1000L)
-        preferences?.edit()?.putLong("refreshTokenExpires", refreshExpiresIn.time)?.apply()
+        var refreshExpiresIn = LocalDateTime.now()
+        refreshExpiresIn = refreshExpiresIn.plusSeconds(7776000)
+        preferences?.edit()?.putString("refreshTokenExpires", refreshExpiresIn.toString())?.apply()
 
         preferences?.edit()?.putInt("bngMembershipId", response.bngMembershipId)?.apply()
 

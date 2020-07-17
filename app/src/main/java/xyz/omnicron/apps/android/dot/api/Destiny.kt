@@ -3,12 +3,13 @@ package xyz.omnicron.apps.android.dot.api
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import com.beust.klaxon.JsonObject
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import org.joda.time.Instant
+import org.joda.time.LocalDateTime
 import org.json.JSONObject
 import retrofit.JSONConverterFactory
 import retrofit2.Call
@@ -23,7 +24,6 @@ import xyz.omnicron.apps.android.dot.api.interfaces.IApiResponseCallback
 import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
 import xyz.omnicron.apps.android.dot.api.models.*
 import xyz.omnicron.apps.android.dot.database.DestinyDatabase
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -79,12 +79,11 @@ class Destiny(ctx: Context): Interceptor {
 
     fun isAccessValid(): Boolean {
 
-        val now = Date()
+//        val accessExpireDate = Date(prefs.getLong("accessTokenExpires", 0))
 
-        val accessExpireDate = Date(prefs.getLong("accessTokenExpires", 0))
+        val accessExpireDate = LocalDateTime.parse(prefs.getString("accessTokenExpires", Instant.EPOCH.toString()))
 
-
-        return accessExpireDate > now
+        return accessExpireDate > LocalDateTime.now()
     }
 
     /**
@@ -94,11 +93,11 @@ class Destiny(ctx: Context): Interceptor {
      * @return If the refresh token has been determined as "should be" valid.
      */
     fun isRefreshValid(): Boolean {
-        val now = Date()
+//        val refreshExpireDate = Date(prefs.getLong("refreshTokenExpires", 0))
 
-        val refreshExpireDate = Date(prefs.getLong("refreshTokenExpires", 0))
+        val refreshExpireDate = LocalDateTime.parse(prefs.getString("refreshTokenExpires", Instant.EPOCH.toString()))
 
-        return refreshExpireDate > now
+        return refreshExpireDate > LocalDateTime.now()
     }
 
 
@@ -119,18 +118,19 @@ class Destiny(ctx: Context): Interceptor {
                 callback.onNetworkTaskFinished(response, call)
 
                 if(response.isSuccessful && response.body() != null) {
+                    val oAuthResponse = response.body() as OAuthResponse
 
-                    val accessExpiresIn = Date()
-                    accessExpiresIn.time = accessExpiresIn.time + (3600 * 1000)
+                    val accessExpiresIn = LocalDateTime.now()
+                    accessExpiresIn.plusSeconds(oAuthResponse.accessTokenExpiresIn)
 
-                    val refreshExpiresIn = Date()
-                    refreshExpiresIn.time = refreshExpiresIn.time + (3600 * 1000)
+                    val refreshExpiresIn = LocalDateTime.now()
+                    refreshExpiresIn.plusSeconds(oAuthResponse.refreshTokenExpiresIn)
 
-                    prefs.edit().putString("accessToken", response.body()?.accessToken).apply()
-                    prefs.edit().putLong("accessTokenExpires", accessExpiresIn.time).apply()
+                    prefs.edit().putString("accessToken", oAuthResponse.accessToken).apply()
+                    prefs.edit().putString("accessTokenExpires", accessExpiresIn.toString()).apply()
 
-                    prefs.edit().putString("refreshToken", response.body()?.refreshToken).apply()
-                    prefs.edit().putLong("refreshTokenExpires", refreshExpiresIn.time).apply()
+                    prefs.edit().putString("refreshToken", oAuthResponse.refreshToken).apply()
+                    prefs.edit().putString("refreshTokenExpires", refreshExpiresIn.toString()).apply()
                 }
             }
 

@@ -92,6 +92,9 @@ dependencies {
     // Swipe to Refresh for RecyclerViews/ListViews
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
+    // Joda-Time for Android
+    implementation 'net.danlew:android.joda:2.10.6'
+
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
     testImplementation 'junit:junit:4.12'
