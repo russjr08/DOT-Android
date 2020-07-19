@@ -3,7 +3,7 @@ package xyz.omnicron.apps.android.dot.ui.activities
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.Intent.FLAG_ACTIVITY_NO_HISTORY
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.AsyncTask
@@ -88,7 +88,8 @@ class LoginActivity : AppCompatActivity(),
                 ))
                                 .setStartAnimations(baseContext, android.R.anim.slide_in_left, android.R.anim.slide_out_right)
                                 .build()
-                intent.intent.flags = FLAG_ACTIVITY_NEW_TASK // This prevents activity going to background after redirection
+                intent.intent.flags = FLAG_ACTIVITY_NO_HISTORY // This prevents activity going to background after redirection
+                intent.intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 client.warmup(0L)
                 intent.launchUrl(context, uri)
             }
