@@ -2,6 +2,7 @@ package xyz.omnicron.apps.android.dot.ui.pursuits
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -59,13 +60,16 @@ class PursuitsFragment : Fragment() {
         swipeContainer.setProgressViewOffset(false, 0, 150)
         swipeContainer.setOnRefreshListener { refreshCharacters() }
 
-        destiny.updateDestinyProfile().subscribe({
+        destiny.updateDestinyProfile().observeOn(AndroidSchedulers.mainThread()).subscribe({
+            Snackbar.make(pursuitsFrameLayout, "Initial profile update completed; Looking for Pursuits...", Snackbar.LENGTH_LONG).show()
             setSelectedCharacter(destiny.destinyProfile.getLastPlayedCharacterId())
             setOnCharacterSelect()
 
             refreshCharacters()
         },
-        { _ ->
+        { error ->
+
+            Log.e("DOT-Initialization", "Error with initial pursuits check. The error given was ${error.localizedMessage}")
             Snackbar.make(pursuitsFrameLayout, "An error occurred trying to check for bounties, try a manual refresh", Snackbar.LENGTH_LONG).show()
         })
 
@@ -85,6 +89,9 @@ class PursuitsFragment : Fragment() {
             character.updatePursuits(destiny).observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io()).subscribe {
                     Snackbar.make(pursuitsFrameLayout, "Finished updating ${character.classType.getNameFromType()}", Snackbar.LENGTH_LONG).show()
+                    if(!this::selectedCharacterId.isInitialized) {
+                        selectedCharacterId = destiny.destinyProfile.getLastPlayedCharacterId()
+                    }
                     if(character.characterId == selectedCharacterId) {
                         pursuitsAdapter.setPursuitsList(character.pursuits)
                         pursuitsAdapter.notifyDataSetChanged()

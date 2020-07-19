@@ -61,7 +61,7 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
             }
         }
 
-        fun applyExpirationLabel(pursuit: DestinyPursuit, expirationText: TextView) {
+        private fun applyExpirationLabel(pursuit: DestinyPursuit, expirationText: TextView) {
             val expirationStrBuilder = StringBuilder()
             val now = LocalDateTime.now()
             val expirationDate = LocalDateTime(pursuit.expirationDate)

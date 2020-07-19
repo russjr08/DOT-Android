@@ -18,7 +18,6 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
-import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -89,14 +88,13 @@ class MainActivity : AppCompatActivity() {
         destiny.database = DestinyDatabase(this, prefs.getString("manifestName", "").orEmpty())
 
         checkLoginIsValid().andThen(promptForUserMembershipChoice()).andThen(destiny.updateDestinyProfile()).subscribe({
-            Snackbar.make(navView, "Initial profile update completed; Looking for Pursuits...", Snackbar.LENGTH_LONG).show()
+
         },
         { error ->
             if(error is DestinyAuthException) {
                 returnToLoginActivity(error)
             } else {
                 // Show error snack bar
-                Snackbar.make(navView, "An error occurred trying to check for bounties, try a manual refresh", Snackbar.LENGTH_LONG).show()
                 Log.e("DOT Authentication", error.toString())
             }
         })

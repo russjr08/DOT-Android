@@ -280,7 +280,7 @@ class Destiny(ctx: Context): Interceptor {
                         }
                         subscriber.onComplete()
                     } else {
-                        subscriber.onError(DestinyParseException("The response from the API was unable to be parsed correctly."))
+                        subscriber.onError(DestinyParseException("An error was returned from the Bungie API."))
                     }
                 }
 
