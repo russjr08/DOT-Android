@@ -269,7 +269,8 @@ class LoginActivity : AppCompatActivity(),
     }
 
     override fun onError(error: Error?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+//        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        Log.e("DOT-Download", error.toString())
     }
 
 }

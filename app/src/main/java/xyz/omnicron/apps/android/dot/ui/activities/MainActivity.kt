@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -64,7 +65,10 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         navHeaderBinding = NavHeaderMainBinding.bind(binding.navView.getHeaderView(0))
 
-
+        feedbackRegion.setOnClickListener {
+            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/russjr08/DOT-Android/issues"))
+            startActivity(browserIntent)
+        }
 
         prefs = getSharedPreferences("dot", Context.MODE_PRIVATE)
 
