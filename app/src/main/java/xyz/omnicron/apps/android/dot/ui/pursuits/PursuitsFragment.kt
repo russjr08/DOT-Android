@@ -2,10 +2,12 @@ package xyz.omnicron.apps.android.dot.ui.pursuits
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,6 +30,7 @@ class PursuitsFragment : Fragment() {
 
 
     private lateinit var characterFab: SpeedDialView
+    private lateinit var nothingLayout: LinearLayout
 
     private lateinit var selectedCharacterId: String
 
@@ -51,6 +54,8 @@ class PursuitsFragment : Fragment() {
         characterFab = view.findViewById(R.id.fab_character_selection)
 
         swipeContainer = view.findViewById(R.id.swipeContainer)
+
+        nothingLayout = view.findViewById(R.id.nothingFoundContainer)
 
         linearLayoutManager = LinearLayoutManager(activity)
         pursuitsContainer.layoutManager = linearLayoutManager
@@ -97,8 +102,22 @@ class PursuitsFragment : Fragment() {
                         pursuitsAdapter.notifyDataSetChanged()
                         swipeContainer.isRefreshing = false
                     }
+                    showListEmptyGraphicIfEmpty()
                 }
         }
+    }
+
+    private fun showListEmptyGraphicIfEmpty() {
+        val mainHandler = Handler(requireContext().mainLooper)
+        val runnable = Runnable {
+            if(getSelectedCharacter().pursuits.size == 0) {
+                nothingLayout.visibility = View.VISIBLE
+            } else {
+                nothingLayout.visibility = View.GONE
+            }
+        }
+        mainHandler.post(runnable)
+
     }
 
     private fun setOnCharacterSelect() {
@@ -109,6 +128,7 @@ class PursuitsFragment : Fragment() {
                     characterFab.close()
                     pursuitsAdapter.setPursuitsList(getSelectedCharacter().pursuits)
                     pursuitsAdapter.notifyDataSetChanged()
+                    showListEmptyGraphicIfEmpty()
                     return@OnActionSelectedListener true // false will close it without animation
                 }
                 R.id.fab_hunter -> {
@@ -116,6 +136,7 @@ class PursuitsFragment : Fragment() {
                     characterFab.close()
                     pursuitsAdapter.setPursuitsList(getSelectedCharacter().pursuits)
                     pursuitsAdapter.notifyDataSetChanged()
+                    showListEmptyGraphicIfEmpty()
                     return@OnActionSelectedListener true
                 }
                 R.id.fab_titan -> {
@@ -123,6 +144,7 @@ class PursuitsFragment : Fragment() {
                     characterFab.close()
                     pursuitsAdapter.setPursuitsList(getSelectedCharacter().pursuits)
                     pursuitsAdapter.notifyDataSetChanged()
+                    showListEmptyGraphicIfEmpty()
                     return@OnActionSelectedListener true
                 }
             }

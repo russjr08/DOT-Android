@@ -7,6 +7,25 @@
     android:layout_height="match_parent"
     tools:context=".ui.pursuits.PursuitsFragment">
 
+    <LinearLayout
+        android:id="@+id/nothingFoundContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
+        <ImageView
+            android:layout_width="52sp"
+            android:layout_height="52sp"
+            android:src="@drawable/ic_done"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:textSize="24sp"
+            android:textStyle="italic"
+            android:text="Congrats, you've reached zero!\nIt's very quiet in here..."/>
+    </LinearLayout>
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:paddingTop="?attr/actionBarSize"
         android:id="@+id/swipeContainer"
