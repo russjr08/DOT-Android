@@ -19,16 +19,18 @@ interface DestinyService {
     fun retrieveManifest(): Call<ManifestResponse>
 
     @GET("User/GetMembershipsById/{membershipID}/-1/")
-    fun retrieveMemberships(@Path("membershipID") id: Int): Call<JSONObject>
+    fun retrieveMemberships(@Header("Authorization") bearer: String, @Path("membershipID") id: Int): Call<JSONObject>
 
     @GET("Destiny2/{membershipType}/Profile/{membershipId}/Character/{characterId}")
-    fun retrieveCharacter(@Path("membershipType") membershipType: Int,
-                          @Path("membershipId") membershipId: String,
-                          @Path("characterId") characterId: String,
-                          @Query("components") components: List<Int>): Call<JSONObject>
+    fun retrieveCharacter(@Header("Authorization") bearer: String,
+                        @Path("membershipType") membershipType: Int,
+                        @Path("membershipId") membershipId: String,
+                        @Path("characterId") characterId: String,
+                        @Query("components") components: List<Int>): Call<JSONObject>
 
     @GET("Destiny2/{membershipType}/Profile/{membershipId}")
-    fun retrieveProfile(@Path("membershipType") membershipType: Int,
+    fun retrieveProfile(@Header("Authorization") bearer: String,
+                        @Path("membershipType") membershipType: Int,
                         @Path("membershipId") membershipId: String,
                         @Query("components") components: List<Int>): Call<JSONObject>
 }

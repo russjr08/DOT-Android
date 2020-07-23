@@ -160,7 +160,7 @@ class Destiny(ctx: Context): Interceptor {
     fun getUserMemberships(callback: IApiResponseCallback<Array<DestinyMembership>>) {
         val memberships = arrayListOf<DestinyMembership>()
 
-        val call = destinyApi.retrieveMemberships(prefs.getInt("bngMembershipId", 0))
+        val call = destinyApi.retrieveMemberships(getAuthorizationBearer(), prefs.getInt("bngMembershipId", 0))
 
         call.enqueue(object: Callback<JSONObject> {
             override fun onFailure(call: Call<JSONObject>, t: Throwable) {
@@ -199,7 +199,7 @@ class Destiny(ctx: Context): Interceptor {
 
     fun updateBungieUser(): Completable {
         return Completable.create { subscriber ->
-            val call = destinyApi.retrieveMemberships(prefs.getInt("bngMembershipId", 0))
+            val call = destinyApi.retrieveMemberships(getAuthorizationBearer(), prefs.getInt("bngMembershipId", 0))
 
             call.enqueue(object: Callback<JSONObject> {
                 override fun onFailure(call: Call<JSONObject>, t: Throwable) {
@@ -238,7 +238,7 @@ class Destiny(ctx: Context): Interceptor {
 
     fun updateDestinyProfile(): Completable {
         return Completable.create { subscriber ->
-            val call = destinyApi.retrieveProfile(getSavedMembershipType().value, getSavedMembershipId(),
+            val call = destinyApi.retrieveProfile(getAuthorizationBearer(), getSavedMembershipType().value, getSavedMembershipId(),
                 listOf(100, 200))
 
             call.enqueue(object: Callback<JSONObject> {
@@ -291,7 +291,7 @@ class Destiny(ctx: Context): Interceptor {
 
     fun retrieveCharacterData(characterId: String, components: List<Int>): Observable<JSONObject> {
         return Observable.create { emitter ->
-            val call = destinyApi.retrieveCharacter(getSavedMembershipType().value,
+            val call = destinyApi.retrieveCharacter(getAuthorizationBearer(), getSavedMembershipType().value,
                 getSavedMembershipId(), characterId, components)
 
             call.enqueue(object: Callback<JSONObject> {
@@ -313,9 +313,14 @@ class Destiny(ctx: Context): Interceptor {
         }
     }
 
+    private fun getAuthorizationBearer(): String {
+        val token = prefs.getString("accessToken", "NULL_TOKEN").orEmpty()
+        return "Bearer $token"
+    }
+
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
         val original = chain.request()
-
+        val nullAuthToken = "NO_TOKEN"
         val request = original.newBuilder()
             .header("X-API-KEY", Constants.API_KEY)
             .method(original.method, original.body)
