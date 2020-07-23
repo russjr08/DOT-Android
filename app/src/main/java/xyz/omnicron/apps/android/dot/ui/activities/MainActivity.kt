@@ -23,6 +23,7 @@ import com.squareup.picasso.Picasso
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.android.ext.android.inject
 import retrofit2.Call
 import retrofit2.Response
@@ -163,14 +164,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun promptForUserMembershipChoice(): Completable {
         return Completable.create { subscriber ->
-            if(prefs.contains("membershipId")) {
+            if(prefs.contains("membershipId") || prefs.contains("membershipType")) {
                 subscriber.onComplete()
             } else {
                 destiny.getUserMemberships(callback = object :
                     IApiResponseCallback<Array<DestinyMembership>> {
                     override fun onRequestSuccess(data: Array<DestinyMembership>) {
 
-                        if (data.size > 1) {
+                        if (data.size <= 2) {
                             prefs.edit().putLong("membershipId", data[0].membershipId).apply()
                             prefs.edit().putInt("membershipType", data[0].membershipType.value)
                                 .apply()
@@ -188,9 +189,9 @@ class MainActivity : AppCompatActivity() {
                             .setTitle(resources.getString(R.string.popup_platform_title))
                             .setItems(platformNames.toTypedArray()) { _, which ->
                                 Log.d("DOT", "Platform Selection: ${data[which].membershipType}")
-                                prefs.edit().putLong("membershipId", data[which].membershipId)
+                                prefs.edit().putLong("membershipId", data[which].membershipId).apply()
                                 prefs.edit()
-                                    .putInt("membershipType", data[which].membershipType.value)
+                                    .putInt("membershipType", data[which].membershipType.value).apply()
                                 subscriber.onComplete()
                             }
                             .show()
