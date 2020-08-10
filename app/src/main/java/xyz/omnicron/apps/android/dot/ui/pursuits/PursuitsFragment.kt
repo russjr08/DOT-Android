@@ -1,17 +1,21 @@
 package xyz.omnicron.apps.android.dot.ui.pursuits
 
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.core.animation.doOnEnd
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.progressindicator.ProgressIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import com.leinardi.android.speeddial.SpeedDialView
@@ -31,9 +35,11 @@ class PursuitsFragment : Fragment() {
 
     private lateinit var characterFab: SpeedDialView
     private lateinit var nothingLayout: LinearLayout
+    private lateinit var refreshProgressBar: ProgressIndicator
 
     private lateinit var selectedCharacterId: String
 
+    private lateinit var refreshTimer: CountDownTimer
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var pursuitsAdapter: PursuitsAdapter
 
@@ -57,6 +63,8 @@ class PursuitsFragment : Fragment() {
 
         nothingLayout = view.findViewById(R.id.nothingFoundContainer)
 
+        refreshProgressBar = view.findViewById(R.id.refreshProgressBar)
+
         linearLayoutManager = LinearLayoutManager(activity)
         pursuitsContainer.layoutManager = linearLayoutManager
         pursuitsAdapter = PursuitsAdapter()
@@ -71,6 +79,7 @@ class PursuitsFragment : Fragment() {
             setOnCharacterSelect()
 
             refreshCharacters()
+            startRefreshTimer()
         },
         { error ->
 
@@ -85,6 +94,30 @@ class PursuitsFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(PursuitsViewModel::class.java)
         // TODO: Use the ViewModel
+    }
+
+    private fun startRefreshTimer() {
+        val refreshInterval = 30000
+        refreshProgressBar.isIndeterminate = false
+        refreshProgressBar.max = refreshInterval
+        refreshProgressBar.progress = refreshInterval
+
+        refreshTimer = object : CountDownTimer(refreshInterval.toLong(), 1000) {
+            override fun onFinish() {
+                refreshCharacters()
+                val animator = ObjectAnimator.ofInt(refreshProgressBar, "progress", refreshInterval).setDuration(3000)
+                animator.doOnEnd {
+                    refreshTimer.start()
+                }
+                animator.start()
+            }
+
+            override fun onTick(millisUntilFinished: Long) {
+                val percentage: Double = (millisUntilFinished.toDouble() / refreshInterval.toDouble()) * refreshInterval
+                ObjectAnimator.ofInt(refreshProgressBar, "progress", percentage.toInt()).setDuration(2000).start()
+            }
+
+        }.start()
     }
 
     private fun refreshCharacters() {

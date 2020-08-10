@@ -9,6 +9,7 @@
 
     <LinearLayout
         android:id="@+id/nothingFoundContainer"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
@@ -55,5 +56,14 @@
         app:sdMainFabClosedSrc="@drawable/ic_warlock_symbol_original"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.progressindicator.ProgressIndicator
+        android:id="@+id/refreshProgressBar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:indeterminate="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
