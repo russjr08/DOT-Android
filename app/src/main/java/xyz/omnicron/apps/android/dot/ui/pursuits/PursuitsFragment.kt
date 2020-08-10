@@ -4,7 +4,6 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.CountDownTimer
-import android.os.Handler
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -141,15 +140,15 @@ class PursuitsFragment : Fragment() {
     }
 
     private fun showListEmptyGraphicIfEmpty() {
-        val mainHandler = Handler(requireContext().mainLooper)
-        val runnable = Runnable {
-            if(getSelectedCharacter().pursuits.size == 0) {
-                nothingLayout.visibility = View.VISIBLE
-            } else {
-                nothingLayout.visibility = View.GONE
-            }
-        }
-        mainHandler.post(runnable)
+//        val mainHandler = Handler(requireContext().mainLooper)
+//        val runnable = Runnable {
+//            if(getSelectedCharacter().pursuits.size == 0) {
+//                nothingLayout.visibility = View.VISIBLE
+//            } else {
+//                nothingLayout.visibility = View.GONE
+//            }
+//        }
+//        mainHandler.post(runnable)
 
     }
 
