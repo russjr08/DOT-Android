@@ -2,6 +2,7 @@ package xyz.omnicron.apps.android.dot.api.models
 
 import io.reactivex.Completable
 import io.reactivex.schedulers.Schedulers
+import org.json.JSONArray
 import org.json.JSONObject
 import xyz.omnicron.apps.android.dot.api.Destiny
 import java.text.SimpleDateFormat
@@ -22,45 +23,24 @@ class DestinyCharacter(var membershipId: String,
 ) {
     fun updatePursuits(destinyApi: Destiny): Completable {
         return Completable.create { subscriber ->
-            destinyApi.retrieveCharacterData(this.characterId, listOf(200,202,102,201,301))
+            destinyApi.retrieveCharacterData(this.characterId, listOf(200,202,102,201,205,301))
                 .subscribeOn(Schedulers.newThread())
                 .subscribe { data ->
                     Thread(Runnable {
-                        val inventoryNode = data.getJSONObject("inventory")
-                        val dataNode = inventoryNode.getJSONObject("data")
-                        val itemsArray = dataNode.getJSONArray("items")
                         this.pursuits.clear()
 
-                        // Begin parsing basic item entries from API
-                        for(i in 0 until itemsArray.length()) {
-                            val itemNode = itemsArray[i] as JSONObject
-                            if(itemNode.getInt("bucketHash") != 1345459588) {
-                                continue
-                            }
-                            val dbItem = destinyApi.database.getDestinyDatabaseItemFromHash(itemNode.getInt("itemHash"),
-                                "DestinyInventoryItemDefinition")
-                            dbItem?.let { datbaseItem ->
-                                if(itemNode.has("expirationDate")) {
-                                    val pursuit = DestinyPursuit(databaseItem = datbaseItem,
-                                        instanceId = itemNode.getString("itemInstanceId"),
-                                        quantity = itemNode.getInt("quantity"),
-                                        expirationDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).parse(itemNode.getString("expirationDate")),
-                                        bucketHash = itemNode.getInt("bucketHash")
-                                    )
-                                    this.pursuits.add(pursuit)
+                        // Parse items from "equipment", which is currently equipped items
+                        data.getJSONObject("equipment").let { equipmentNode ->
+                            val dataNode = equipmentNode.getJSONObject("data")
+                            val itemsArray = dataNode.getJSONArray("items")
+                            addPursuitFromNode(itemsArray, destinyApi)
+                        }
 
-                                } else {
-                                    val pursuit = DestinyPursuit(databaseItem = datbaseItem,
-                                        instanceId = itemNode.optString("itemInstanceId"),
-                                        quantity = itemNode.getInt("quantity"),
-                                        expirationDate = null,
-                                        bucketHash = itemNode.getInt("bucketHash")
-                                    )
-                                    this.pursuits.add(pursuit)
-
-                                }
-
-                            }
+                        // Parse items from "inventory"
+                        data.getJSONObject("inventory").let { inventoryNode ->
+                            val dataNode = inventoryNode.getJSONObject("data")
+                            val itemsArray = dataNode.getJSONArray("items")
+                            addPursuitFromNode(itemsArray, destinyApi)
                         }
 
                         // Begin parsing item components data (such as pursuit objectives)
@@ -88,10 +68,59 @@ class DestinyCharacter(var membershipId: String,
 
                             }
                         }
+
+                        this.pursuits = stripPursuitsWithZeroObjectives(this.pursuits)
                         subscriber.onComplete()
                     }).start()
                 }
         }
+    }
+
+    private fun addPursuitFromNode(itemsArray: JSONArray, destinyApi: Destiny) {
+        // Begin parsing basic item entries from API
+        for(i in 0 until itemsArray.length()) {
+            val itemNode = itemsArray[i] as JSONObject
+            val armorBuckets = arrayOf(1585787867, 14239492, 20886954, 3448274439, 3551918588)
+            if(itemNode.getInt("bucketHash") != 1345459588 && !armorBuckets.contains(itemNode.getLong("bucketHash"))) {
+                continue
+            }
+            val dbItem = destinyApi.database.getDestinyDatabaseItemFromHash(itemNode.getInt("itemHash"),
+                "DestinyInventoryItemDefinition")
+            dbItem?.let { databaseItem ->
+                if(itemNode.has("expirationDate")) {
+                    val pursuit = DestinyPursuit(databaseItem = databaseItem,
+                        instanceId = itemNode.getString("itemInstanceId"),
+                        quantity = itemNode.getInt("quantity"),
+                        expirationDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).parse(itemNode.getString("expirationDate")),
+                        bucketHash = itemNode.getInt("bucketHash")
+                    )
+                    this.pursuits.add(pursuit)
+
+                } else {
+                    val pursuit = DestinyPursuit(databaseItem = databaseItem,
+                        instanceId = itemNode.optString("itemInstanceId"),
+                        quantity = itemNode.getInt("quantity"),
+                        expirationDate = null,
+                        bucketHash = itemNode.getInt("bucketHash")
+                    )
+                    this.pursuits.add(pursuit)
+
+                }
+
+            }
+        }
+    }
+
+    fun stripPursuitsWithZeroObjectives(pursuits: ArrayList<DestinyPursuit>): ArrayList<DestinyPursuit> {
+        val cleanedPursuits = arrayListOf<DestinyPursuit>()
+
+        for(pursuit in pursuits) {
+            if(pursuit.objectives.size > 0) {
+                cleanedPursuits.add(pursuit)
+            }
+        }
+
+        return cleanedPursuits
     }
 }
 
