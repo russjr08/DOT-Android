@@ -94,15 +94,21 @@ class MainActivity : AppCompatActivity() {
 
         checkLoginIsValid().andThen(promptForUserMembershipChoice()).andThen(destiny.updateDestinyProfile()).subscribe({
 
-        },
-        { error ->
+        }
+        ) { error ->
             if(error is DestinyAuthException) {
                 returnToLoginActivity(error)
             } else {
                 // Show error snack bar
                 Log.e("DOT Authentication", error.toString())
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("That shouldn't have happened...")
+                    .setMessage(error.toString())
+                    .setPositiveButton("Acknowledge") { dialog, _ ->
+                        dialog.dismiss()
+                    }.show()
             }
-        })
+        }
 
 
 
