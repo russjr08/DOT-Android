@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.Menu
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.get
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -19,6 +20,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -99,7 +101,6 @@ class MainActivity : AppCompatActivity() {
             if(error is DestinyAuthException) {
                 returnToLoginActivity(error)
             } else {
-                // Show error snack bar
                 Log.e("DOT Authentication", error.toString())
                 MaterialAlertDialogBuilder(this)
                     .setTitle("That shouldn't have happened...")
@@ -242,6 +243,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
+        menu[0].setOnMenuItemClickListener {
+            Snackbar.make(this.nav_view, "Settings is not ready yet, check back soon! :)", Snackbar.LENGTH_LONG).show()
+            return@setOnMenuItemClickListener true
+        }
         return true
     }
 
