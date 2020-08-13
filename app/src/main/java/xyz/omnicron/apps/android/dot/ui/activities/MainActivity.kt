@@ -178,30 +178,32 @@ class MainActivity : AppCompatActivity() {
                     IApiResponseCallback<Array<DestinyMembership>> {
                     override fun onRequestSuccess(data: Array<DestinyMembership>) {
 
-                        if (data.size <= 2) {
+                        if (data.size == 1) {
                             prefs.edit().putLong("membershipId", data[0].membershipId).apply()
                             prefs.edit().putInt("membershipType", data[0].membershipType.value)
                                 .apply()
                             subscriber.onComplete()
                             return
-                        }
-
-                        val platformNames = arrayListOf<String>()
-                        for (membership in data) {
-                            platformNames.add("${membership.membershipType.getNameFromType()} (${membership.displayName})")
-                        }
-
-                        @Suppress("UNCHECKED_CAST")
-                        MaterialAlertDialogBuilder(this@MainActivity)
-                            .setTitle(resources.getString(R.string.popup_platform_title))
-                            .setItems(platformNames.toTypedArray()) { _, which ->
-                                Log.d("DOT", "Platform Selection: ${data[which].membershipType}")
-                                prefs.edit().putLong("membershipId", data[which].membershipId).apply()
-                                prefs.edit()
-                                    .putInt("membershipType", data[which].membershipType.value).apply()
-                                subscriber.onComplete()
+                        } else {
+                            val platformNames = arrayListOf<String>()
+                            for (membership in data) {
+                                platformNames.add("${membership.membershipType.getNameFromType()} (${membership.displayName})")
                             }
-                            .show()
+
+                            @Suppress("UNCHECKED_CAST")
+                            MaterialAlertDialogBuilder(this@MainActivity)
+                                .setTitle(resources.getString(R.string.popup_platform_title))
+                                .setItems(platformNames.toTypedArray()) { _, which ->
+                                    Log.d("DOT", "Platform Selection: ${data[which].membershipType}")
+                                    prefs.edit().putLong("membershipId", data[which].membershipId).apply()
+                                    prefs.edit()
+                                        .putInt("membershipType", data[which].membershipType.value).apply()
+                                    subscriber.onComplete()
+                                }
+                                .show()
+                        }
+
+
 
                     }
 
