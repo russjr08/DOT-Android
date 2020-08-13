@@ -144,7 +144,7 @@ class LoginActivity : AppCompatActivity(),
         // Refresh Token
         preferences?.edit()?.putString("refreshToken", response.refreshToken)?.apply()
         var refreshExpiresIn = LocalDateTime.now()
-        refreshExpiresIn = refreshExpiresIn.plusSeconds(7776000)
+        refreshExpiresIn = refreshExpiresIn.plusSeconds(response.refreshTokenExpiresIn)
         preferences?.edit()?.putString("refreshTokenExpires", refreshExpiresIn.toString())?.apply()
 
         preferences?.edit()?.putInt("bngMembershipId", response.bngMembershipId)?.apply()

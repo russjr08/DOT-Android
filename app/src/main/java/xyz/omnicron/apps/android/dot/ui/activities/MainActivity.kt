@@ -29,10 +29,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.android.ext.android.inject
 import retrofit2.Call
 import retrofit2.Response
-import xyz.omnicron.apps.android.dot.App
-import xyz.omnicron.apps.android.dot.DestinyAuthException
-import xyz.omnicron.apps.android.dot.DestinyException
-import xyz.omnicron.apps.android.dot.R
+import xyz.omnicron.apps.android.dot.*
 import xyz.omnicron.apps.android.dot.api.Destiny
 import xyz.omnicron.apps.android.dot.api.interfaces.IApiResponseCallback
 import xyz.omnicron.apps.android.dot.api.interfaces.IResponseReceiver
@@ -41,6 +38,8 @@ import xyz.omnicron.apps.android.dot.api.models.OAuthResponse
 import xyz.omnicron.apps.android.dot.database.DestinyDatabase
 import xyz.omnicron.apps.android.dot.databinding.ActivityMainBinding
 import xyz.omnicron.apps.android.dot.databinding.NavHeaderMainBinding
+import xyz.omnicron.apps.android.dot.ui.pursuits.IPursuitsView
+import xyz.omnicron.apps.android.dot.ui.pursuits.PursuitsFragment
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -95,7 +94,10 @@ class MainActivity : AppCompatActivity() {
         destiny.database = DestinyDatabase(this, prefs.getString("manifestName", "").orEmpty())
 
         checkLoginIsValid().andThen(promptForUserMembershipChoice()).andThen(destiny.updateDestinyProfile()).subscribe({
-
+            val fragment = supportFragmentManager.currentNavigationFragment
+            if(fragment is PursuitsFragment) {
+                (fragment as IPursuitsView).onReadyToStart()
+            }
         }
         ) { error ->
             if(error is DestinyAuthException) {

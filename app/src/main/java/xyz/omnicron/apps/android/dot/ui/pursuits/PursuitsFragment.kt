@@ -26,8 +26,13 @@ import xyz.omnicron.apps.android.dot.R
 import xyz.omnicron.apps.android.dot.api.Destiny
 import xyz.omnicron.apps.android.dot.api.models.DestinyCharacter
 import xyz.omnicron.apps.android.dot.api.models.DestinyClass
+import java.util.logging.Logger
 
-class PursuitsFragment : Fragment() {
+interface IPursuitsView {
+    fun onReadyToStart()
+}
+
+class PursuitsFragment : Fragment(), IPursuitsView {
 
     private val destiny: Destiny by inject()
 
@@ -72,6 +77,11 @@ class PursuitsFragment : Fragment() {
         swipeContainer.setProgressViewOffset(false, 0, 150)
         swipeContainer.setOnRefreshListener { refreshCharacters() }
 
+
+        super.onViewCreated(view, savedInstanceState)
+    }
+
+    override fun onReadyToStart() {
         destiny.updateDestinyProfile().observeOn(AndroidSchedulers.mainThread()).subscribe({
             Snackbar.make(pursuitsFrameLayout, "Initial profile update completed; Looking for Pursuits...", Snackbar.LENGTH_LONG).show()
             setSelectedCharacter(destiny.destinyProfile.getLastPlayedCharacterId())
@@ -80,13 +90,12 @@ class PursuitsFragment : Fragment() {
             refreshCharacters()
             startRefreshTimer()
         },
-        { error ->
+            { error ->
 
-            Log.e("DOT-Initialization", "Error with initial pursuits check. The error given was ${error.localizedMessage}")
-            Snackbar.make(pursuitsFrameLayout, "An error occurred trying to check for bounties, try a manual refresh", Snackbar.LENGTH_LONG).show()
-        })
+                Log.e("DOT-Initialization", "Error with initial pursuits check. The error given was ${error.localizedMessage}")
+                Snackbar.make(pursuitsFrameLayout, "An error occurred trying to check for bounties, try a manual refresh", Snackbar.LENGTH_LONG).show()
+            })
 
-        super.onViewCreated(view, savedInstanceState)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
