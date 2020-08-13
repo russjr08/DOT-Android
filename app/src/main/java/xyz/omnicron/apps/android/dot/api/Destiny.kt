@@ -97,7 +97,8 @@ class Destiny(ctx: Context): Interceptor {
 
         val refreshExpireDate = LocalDateTime.parse(prefs.getString("refreshTokenExpires", Instant.EPOCH.toString()))
 
-        return refreshExpireDate > LocalDateTime.now()
+//        return refreshExpireDate > LocalDateTime.now() TODO: Revisit refresh logic here, and in #refreshAccessToken()
+        return true
     }
 
 
@@ -158,8 +159,6 @@ class Destiny(ctx: Context): Interceptor {
      * (or rather, linked to the signed in Bungie.net profile)
      */
     fun getUserMemberships(callback: IApiResponseCallback<Array<DestinyMembership>>) {
-        val memberships = arrayListOf<DestinyMembership>()
-
         val call = destinyApi.retrieveMemberships(getAuthorizationBearer(), prefs.getInt("bngMembershipId", 0))
 
         call.enqueue(object: Callback<JSONObject> {

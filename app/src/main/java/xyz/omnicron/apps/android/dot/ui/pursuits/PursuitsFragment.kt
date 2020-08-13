@@ -124,6 +124,10 @@ class PursuitsFragment : Fragment() {
         swipeContainer.isRefreshing = true
         destiny.destinyProfile.characters.forEach { character ->
             character.updatePursuits(destiny).observeOn(AndroidSchedulers.mainThread())
+                .doOnError { error ->
+                    Logger.getLogger("DOT-Pursuits [Update]").severe(error.message)
+                    Snackbar.make(pursuitsFrameLayout, "Failed to update character; Bungie might be having issues...", Snackbar.LENGTH_LONG).show()
+                }
                 .subscribeOn(Schedulers.io()).subscribe {
                     Snackbar.make(pursuitsFrameLayout, "Finished updating ${character.classType.getNameFromType()}", Snackbar.LENGTH_LONG).show()
                     if(!this::selectedCharacterId.isInitialized) {
