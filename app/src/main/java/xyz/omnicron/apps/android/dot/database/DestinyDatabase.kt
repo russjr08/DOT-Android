@@ -34,15 +34,14 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
      * @return A generic, barebones, representation of the item from the Manifest.
      */
     fun getDestinyDatabaseItemFromHash(hash: Int, table: String): DestinyDatabaseItem? {
-
-        val cursor = this.openDatabase().rawQuery("SELECT * FROM ${table} WHERE id + 4294967296 = ${hash} OR id = ${hash}", null)
-
         // Database lookups are expensive. If the item has already been looked up and cached,
         // return the entry from cache instead.
         if(DestinyDatabaseCache.itemCache.containsKey(hash)) {
-            cursor.close()
             return DestinyDatabaseCache.itemCache[hash]
         }
+
+        val database = this.openDatabase()
+        val cursor = database.rawQuery("SELECT * FROM ${table} WHERE id + 4294967296 = ${hash} OR id = ${hash}", null)
 
         if(cursor.moveToFirst()) {
             val item = Klaxon().parse<DestinyDatabaseItem>(cursor.getString(1))
@@ -51,6 +50,7 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
             item?.let { DestinyDatabaseCache.itemCache.put(hash, it) }
             this.logger.log(Level.INFO, "Added an entry into database cache: ${item?.displayProperties?.name}")
             cursor.close()
+            database.close()
             return item
         }
 
@@ -58,14 +58,14 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
     }
 
     fun getDestinyDatabaseObjectiveFromHash(hash: Int, table: String): DestinyDatabaseObjective? {
-        val cursor = this.openDatabase().rawQuery("SELECT * FROM ${table} WHERE id + 4294967296 = ${hash} OR id = ${hash}", null)
-
         // Database lookups are expensive. If the item has already been looked up and cached,
         // return the entry from cache instead.
         if(DestinyDatabaseCache.objectivesCache.containsKey(hash)) {
-            cursor.close()
             return DestinyDatabaseCache.objectivesCache[hash]
         }
+
+        val database = this.openDatabase()
+        val cursor = database.rawQuery("SELECT * FROM ${table} WHERE id + 4294967296 = ${hash} OR id = ${hash}", null)
 
         if(cursor.moveToFirst()) {
             val item = Klaxon().parse<DestinyDatabaseObjective>(cursor.getString(1))
@@ -74,6 +74,7 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
             item?.let { DestinyDatabaseCache.objectivesCache.put(hash, it) }
             this.logger.log(Level.INFO, "Added an objective into database cache: ${item?.progressDescription}")
             cursor.close()
+            database.close()
             return item
         }
 
