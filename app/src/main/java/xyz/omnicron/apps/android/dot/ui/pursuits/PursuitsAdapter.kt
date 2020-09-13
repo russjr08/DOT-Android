@@ -5,10 +5,12 @@ import android.graphics.Color
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 import org.joda.time.LocalDateTime
 import org.joda.time.Period
 import xyz.omnicron.apps.android.dot.R
@@ -90,6 +92,7 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
             val pursuitTitleText: TextView = this.itemView.findViewById(R.id.pursuitTitleText)
             val pursuitDescriptionText: TextView = this.itemView.findViewById(R.id.pursuitDescriptionText)
             val pursuitTypeText: TextView = this.itemView.findViewById(R.id.pursuitTypeText)
+            val pursuitIcon: ImageView = this.itemView.findViewById(R.id.objective_icon)
             val objectivesRecyclerView: RecyclerView = this.itemView.findViewById(R.id.objectivesHolder)
             val pursuitHeader: LinearLayout = this.itemView.findViewById(R.id.pursuitHeader)
             val expirationText: TextView = this.itemView.findViewById(R.id.expiration_label)
@@ -129,6 +132,8 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
                     pursuitTypeText.setTextColor(Color.parseColor("#FFFFFF"))
                 }
             }
+
+            Picasso.with(ctx).load("https://bungie.net${pursuit.databaseItem.displayProperties.icon}").into(pursuitIcon)
 
             val layoutManager = LinearLayoutManager(ctx, RecyclerView.VERTICAL, false)
             objectivesRecyclerView.apply {

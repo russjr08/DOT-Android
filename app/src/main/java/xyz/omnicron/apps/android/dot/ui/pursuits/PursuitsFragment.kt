@@ -81,6 +81,7 @@ class PursuitsFragment : Fragment(), IPursuitsView {
         super.onViewCreated(view, savedInstanceState)
     }
 
+    @SuppressLint("CheckResult")
     override fun onReadyToStart() {
         destiny.updateDestinyProfile().observeOn(AndroidSchedulers.mainThread()).subscribe({
             Snackbar.make(pursuitsFrameLayout, "Initial profile update completed; Looking for Pursuits...", Snackbar.LENGTH_LONG).show()
