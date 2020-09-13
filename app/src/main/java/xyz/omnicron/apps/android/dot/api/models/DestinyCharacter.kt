@@ -70,6 +70,7 @@ class DestinyCharacter(var membershipId: String,
                         }
 
                         this.pursuits = stripPursuitsWithZeroObjectives(this.pursuits)
+                        this.pursuits = stripCompletedPursuits(this.pursuits)
                         subscriber.onComplete()
                     }).start()
                 }
@@ -111,11 +112,31 @@ class DestinyCharacter(var membershipId: String,
         }
     }
 
-    fun stripPursuitsWithZeroObjectives(pursuits: ArrayList<DestinyPursuit>): ArrayList<DestinyPursuit> {
+    private fun stripPursuitsWithZeroObjectives(pursuits: ArrayList<DestinyPursuit>): ArrayList<DestinyPursuit> {
         val cleanedPursuits = arrayListOf<DestinyPursuit>()
 
         for(pursuit in pursuits) {
             if(pursuit.objectives.size > 0) {
+                cleanedPursuits.add(pursuit)
+            }
+        }
+
+        return cleanedPursuits
+    }
+
+    private fun stripCompletedPursuits(pursuits: ArrayList<DestinyPursuit>): ArrayList<DestinyPursuit> {
+        val cleanedPursuits = arrayListOf<DestinyPursuit>()
+
+        for(pursuit in pursuits) {
+            var hasAnIncompleteObjective = false
+            for(objective in pursuit.objectives) {
+                if(!objective.complete) {
+                    hasAnIncompleteObjective = true
+                    break
+                }
+            }
+
+            if(hasAnIncompleteObjective) {
                 cleanedPursuits.add(pursuit)
             }
         }
