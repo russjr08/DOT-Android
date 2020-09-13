@@ -1,6 +1,6 @@
 ---
-name: Feature request
-about: Suggest an idea for this DOT
+name: Feature Request
+about: Suggest an idea for Destiny Objective Tracker
 title: "[Request] Insert a one-liner description here!"
 labels: enhancement
 assignees: russjr08
