@@ -20,6 +20,6 @@ jobs:
         run: bash ./gradlew assembleDebug --stacktrace
       - name: Upload APK to artifacts
         uses: actions/upload-artifact@v1
-      with:
-        name: dot-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
+        with:
+          name: dot-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
