@@ -123,8 +123,6 @@ class Destiny(ctx: Context): Interceptor {
             }
 
             override fun onResponse(call: Call<OAuthResponse>, response: Response<OAuthResponse>) {
-                callback.onNetworkTaskFinished(response, call)
-
                 if(response.isSuccessful && response.body() != null) {
                     val oAuthResponse = response.body() as OAuthResponse
 
@@ -145,6 +143,8 @@ class Destiny(ctx: Context): Interceptor {
                     authenticationData.refreshToken = oAuthResponse.refreshToken
                     authenticationData.refreshExpiresAt = refreshExpiresIn
                 }
+
+                callback.onNetworkTaskFinished(response, call)
             }
 
         })
