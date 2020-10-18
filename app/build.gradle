@@ -95,6 +95,14 @@ dependencies {
     // Joda-Time for Android
     implementation 'net.danlew:android.joda:2.10.6'
 
+    // Chucker, a utility for inspecting OkHTTP calls
+    debugImplementation "com.github.chuckerteam.chucker:library:3.3.0"
+    // Disables Chucker in release builds
+    releaseImplementation "com.github.chuckerteam.chucker:library-no-op:3.3.0"
+
+    // Used for restarting an application on a critical failure
+    implementation 'com.jakewharton:process-phoenix:2.0.0'
+
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
     testImplementation 'junit:junit:4.12'

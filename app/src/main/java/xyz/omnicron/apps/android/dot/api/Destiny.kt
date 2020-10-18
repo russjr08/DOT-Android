@@ -3,6 +3,7 @@ package xyz.omnicron.apps.android.dot.api
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
@@ -41,6 +42,7 @@ class Destiny(ctx: Context): Interceptor {
 
         val httpClient = OkHttpClient.Builder()
         httpClient.addInterceptor(this)
+        httpClient.addInterceptor(ChuckerInterceptor(ctx))
 
         val client = httpClient.build()
 
