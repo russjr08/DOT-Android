@@ -21,6 +21,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
+import com.jakewharton.processphoenix.ProcessPhoenix
 import com.squareup.picasso.Picasso
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -68,7 +69,8 @@ class MainActivity : AppCompatActivity() {
         navHeaderBinding = NavHeaderMainBinding.bind(binding.navView.getHeaderView(0))
 
         feedbackRegion.setOnClickListener {
-            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/russjr08/DOT-Android/issues"))
+            val browserIntent = Intent(Intent.ACTION_VIEW,
+                Uri.parse("https://github.com/russjr08/DOT-Android/issues"))
             startActivity(browserIntent)
         }
 
@@ -93,44 +95,65 @@ class MainActivity : AppCompatActivity() {
 
         destiny.database = DestinyDatabase(this, prefs.getString("manifestName", "").orEmpty())
 
-        checkLoginIsValid().andThen(promptForUserMembershipChoice()).andThen(destiny.updateDestinyProfile()).subscribe({
-            val fragment = supportFragmentManager.currentNavigationFragment
-            if(fragment is PursuitsFragment) {
-                (fragment as IPursuitsView).onReadyToStart()
+        destiny.refreshAccessToken(object : IResponseReceiver<OAuthResponse> {
+            override fun onNetworkTaskFinished(response: Response<OAuthResponse>,request: Call<OAuthResponse>) {
+                promptForUserMembershipChoice().andThen(destiny.updateDestinyProfile()).subscribe({
+                    val fragment = supportFragmentManager.currentNavigationFragment
+                    if(fragment is PursuitsFragment) {
+                        (fragment as IPursuitsView).onReadyToStart()
+                    }
+                }) { error ->
+                    if(error is DestinyAuthException) {
+                        returnToLoginActivity(error)
+                    } else {
+                        Log.e("DOT Authentication", error.toString())
+                        MaterialAlertDialogBuilder(this@MainActivity)
+                            .setTitle("That shouldn't have happened...")
+                            .setMessage(error.toString())
+                            .setPositiveButton("Restart App") { dialog, _ ->
+                                dialog.dismiss()
+                                ProcessPhoenix
+                                    .triggerRebirth(this@MainActivity,
+                                    Intent(this@MainActivity,
+                                        LoginActivity::class.java))
+                            }.show()
+                    }
+                }
+
             }
-        }
-        ) { error ->
-            if(error is DestinyAuthException) {
-                returnToLoginActivity(error)
-            } else {
+
+            override fun onNetworkFailure(request: Call<OAuthResponse>, error: Throwable) {
                 Log.e("DOT Authentication", error.toString())
-                MaterialAlertDialogBuilder(this)
-                    .setTitle("That shouldn't have happened...")
+                MaterialAlertDialogBuilder(baseContext)
+                    .setTitle("Failed To Authenticate With Bungie...")
                     .setMessage(error.toString())
                     .setPositiveButton("Acknowledge") { dialog, _ ->
                         dialog.dismiss()
+                        finish()
                     }.show()
             }
-        }
-
-
+        })
 
         updateNavHeader()
 
     }
 
 
-
+    // TODO: Reimplement authentication validity checking
     private fun checkLoginIsValid(): Completable {
         return Completable.create { subscriber ->
             if(!destiny.isAccessValid()) {
                 if(destiny.isRefreshValid()) {
-                    destiny.refreshAccessToken(callback = object: IResponseReceiver<OAuthResponse> {
-                        override fun onNetworkTaskFinished(response: Response<OAuthResponse>, request: Call<OAuthResponse>) {
+                    destiny.refreshAccessToken(
+                        callback = object: IResponseReceiver<OAuthResponse> {
+                        override fun onNetworkTaskFinished(response: Response<OAuthResponse>,
+                                                           request: Call<OAuthResponse>) {
+                            Log.d("DOT Auth Refresh", "Updated Authentication Tokens")
                             subscriber.onComplete()
                         }
 
-                        override fun onNetworkFailure(request: Call<OAuthResponse>, error: Throwable) {
+                        override fun onNetworkFailure(request: Call<OAuthResponse>,
+                                                      error: Throwable) {
                             if(error is DestinyException) {
                                 subscriber.onError(error)
                             } else {
@@ -159,13 +182,15 @@ class MainActivity : AppCompatActivity() {
         if(error?.message != null) {
             MaterialAlertDialogBuilder(this)
                 .setTitle(resources.getString(R.string.popup_auth_expired_error_title))
-                .setMessage(resources.getString(R.string.popup_auth_expired_error_body).replace("%s".toRegex(), error.toString()))
+                .setMessage(resources.getString(R.string.popup_auth_expired_error_body)
+                    .replace("%s".toRegex(), error.toString()))
                 .setPositiveButton(R.string.popup_auth_expired_button_title, listener)
                 .show()
         } else {
             MaterialAlertDialogBuilder(this)
                 .setTitle(resources.getString(R.string.popup_auth_expired_error_title))
-                .setMessage(resources.getString(R.string.popup_auth_expired_error_body).replace("%s".toRegex(), resources.getString(R.string.popup_auth_expired_no_error)))
+                .setMessage(resources.getString(R.string.popup_auth_expired_error_body)
+                    .replace("%s".toRegex(), resources.getString(R.string.popup_auth_expired_no_error)))
                 .setPositiveButton(R.string.popup_auth_expired_button_title, listener)
                 .show()
         }

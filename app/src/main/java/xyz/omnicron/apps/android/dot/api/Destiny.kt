@@ -33,6 +33,7 @@ class Destiny(ctx: Context): Interceptor {
 
     private val destinyApi: DestinyService
     private val prefs: SharedPreferences
+    private val authenticationData: BungieAuthenticationData
 
     lateinit var bungieNetUser: BungieNetUser
     lateinit var destinyProfile: DestinyProfile
@@ -58,6 +59,16 @@ class Destiny(ctx: Context): Interceptor {
 
 
         prefs = ctx.getSharedPreferences("dot", Context.MODE_PRIVATE)
+
+        val currentAccessToken = prefs.getString("accessToken", "NO_TOKEN") as String
+        val currentRefreshToken = prefs.getString("refreshToken", "NO_TOKEN") as String
+
+        val currentAccessExpireDate = LocalDateTime.parse(prefs.getString("accessTokenExpires", Instant.EPOCH.toString()))
+        val currentRefreshExpireDate = LocalDateTime.parse(prefs.getString("refreshTokenExpires", Instant.EPOCH.toString()))
+
+        authenticationData = BungieAuthenticationData(currentAccessToken, currentRefreshToken, currentAccessExpireDate, currentRefreshExpireDate)
+
+
     }
 
     fun getSavedMembershipId(): String {
@@ -80,12 +91,7 @@ class Destiny(ctx: Context): Interceptor {
      */
 
     fun isAccessValid(): Boolean {
-
-//        val accessExpireDate = Date(prefs.getLong("accessTokenExpires", 0))
-
-        val accessExpireDate = LocalDateTime.parse(prefs.getString("accessTokenExpires", Instant.EPOCH.toString()))
-
-        return accessExpireDate > LocalDateTime.now()
+        return authenticationData.accessExpiresAt > LocalDateTime.now()
     }
 
     /**
@@ -108,8 +114,7 @@ class Destiny(ctx: Context): Interceptor {
      * Reaches out to the Bungie token endpoint to exchange our refresh token for a new set of tokens.
      */
     fun refreshAccessToken(callback: IResponseReceiver<OAuthResponse>){
-        //TODO: Implement persisting new set of tokens
-        val refreshToken = prefs.getString("refreshToken", "INVALID") as String
+        val refreshToken = authenticationData.refreshToken
         val call = destinyApi.retrieveTokens("", Constants.CLIENT_ID, "refresh_token", Constants.CLIENT_SECRET, refreshToken)
 
         call.enqueue(object : Callback<OAuthResponse> {
@@ -123,17 +128,22 @@ class Destiny(ctx: Context): Interceptor {
                 if(response.isSuccessful && response.body() != null) {
                     val oAuthResponse = response.body() as OAuthResponse
 
-                    val accessExpiresIn = LocalDateTime.now()
-                    accessExpiresIn.plusSeconds(oAuthResponse.accessTokenExpiresIn)
+                    var accessExpiresIn = LocalDateTime.now()
+                    accessExpiresIn = accessExpiresIn.plusSeconds(oAuthResponse.accessTokenExpiresIn)
 
-                    val refreshExpiresIn = LocalDateTime.now()
-                    refreshExpiresIn.plusSeconds(oAuthResponse.refreshTokenExpiresIn)
+                    var refreshExpiresIn = LocalDateTime.now()
+                    refreshExpiresIn = refreshExpiresIn.plusSeconds(oAuthResponse.refreshTokenExpiresIn)
 
                     prefs.edit().putString("accessToken", oAuthResponse.accessToken).apply()
                     prefs.edit().putString("accessTokenExpires", accessExpiresIn.toString()).apply()
 
                     prefs.edit().putString("refreshToken", oAuthResponse.refreshToken).apply()
                     prefs.edit().putString("refreshTokenExpires", refreshExpiresIn.toString()).apply()
+
+                    authenticationData.accessToken = oAuthResponse.accessToken
+                    authenticationData.accessExpiresAt = accessExpiresIn
+                    authenticationData.refreshToken = oAuthResponse.refreshToken
+                    authenticationData.refreshExpiresAt = refreshExpiresIn
                 }
             }
 
@@ -281,7 +291,8 @@ class Destiny(ctx: Context): Interceptor {
                         }
                         subscriber.onComplete()
                     } else {
-                        subscriber.onError(DestinyParseException("An error was returned from the Bungie API."))
+                        subscriber.onError(DestinyParseException("An error was returned from the Bungie API (HTTP ${response.code()}."))
+                        Log.e("DOT ERR: (updateProfile)", "Unexpected error from Bungie, response was as follows: ${response.body()} // Result code was ${response.code()}")
                     }
                 }
 
@@ -315,8 +326,7 @@ class Destiny(ctx: Context): Interceptor {
     }
 
     private fun getAuthorizationBearer(): String {
-        val token = prefs.getString("accessToken", "NULL_TOKEN").orEmpty()
-        return "Bearer $token"
+        return "Bearer ${authenticationData.accessToken}"
     }
 
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
