@@ -101,8 +101,6 @@ class Destiny(ctx: Context): Interceptor {
      * @return If the refresh token has been determined as "should be" valid.
      */
     fun isRefreshValid(): Boolean {
-//        val refreshExpireDate = Date(prefs.getLong("refreshTokenExpires", 0))
-
         val refreshExpireDate = LocalDateTime.parse(prefs.getString("refreshTokenExpires", Instant.EPOCH.toString()))
 
 //        return refreshExpireDate > LocalDateTime.now() TODO: Revisit refresh logic here, and in #refreshAccessToken()

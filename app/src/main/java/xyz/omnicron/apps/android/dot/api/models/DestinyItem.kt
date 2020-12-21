@@ -20,6 +20,7 @@ class DestinyPursuit(databaseItem: DestinyDatabaseItem,
 ) : DestinyItem(databaseItem, instanceId, quantity, bucketHash) {
 
     val objectives = arrayListOf<DestinyObjectiveData>()
+    val rewards = arrayListOf<DestinyDatabaseItem>()
 
 }
 

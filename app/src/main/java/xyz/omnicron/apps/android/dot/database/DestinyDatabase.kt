@@ -3,6 +3,7 @@ package xyz.omnicron.apps.android.dot.database
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.beust.klaxon.Json
 import com.beust.klaxon.Klaxon
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -91,11 +92,21 @@ class DestinyDatabaseCache {
 }
 
 class DestinyDatabaseItem(
-    var displayProperties: DisplayProperties,
-    var hash: Long,
-    var redacted: Boolean,
-    var itemTypeDisplayName: String,
-    var itemTypeAndTierDisplayName: String
+    var displayProperties: DisplayProperties?,
+    var hash: Long?,
+    var redacted: Boolean?,
+    var itemTypeDisplayName: String?,
+    var itemTypeAndTierDisplayName: String?,
+    @Json("value") var rewards: DestinyDatabaseRewards? = null
+)
+
+class DestinyDatabaseRewards(
+    @Json(name = "itemValue") var entries: Array<DestinyDatabaseRewardEntry> = emptyArray()
+)
+
+class DestinyDatabaseRewardEntry(
+    var itemHash: Long = 0,
+    var quantity: Int = 0
 )
 
 class DestinyDatabaseObjective(
