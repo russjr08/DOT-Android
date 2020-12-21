@@ -270,7 +270,7 @@ class LoginActivity : AppCompatActivity(),
 
     override fun onError(error: Error?) {
 //        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        Log.e("DOT-Download", error?.connectionException?.localizedMessage)
+        Log.e("DOT-Download", error?.connectionException?.localizedMessage!!)
     }
 
 }
