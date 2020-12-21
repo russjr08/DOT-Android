@@ -17,6 +17,7 @@ import xyz.omnicron.apps.android.dot.R
 import xyz.omnicron.apps.android.dot.api.models.DestinyPursuit
 import xyz.omnicron.apps.android.dot.inflate
 import xyz.omnicron.apps.android.dot.ui.objectives.ObjectivesAdapter
+import xyz.omnicron.apps.android.dot.ui.objectives.RewardsAdapter
 import java.util.*
 
 class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
@@ -94,11 +95,12 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
             val pursuitTypeText: TextView = this.itemView.findViewById(R.id.pursuitTypeText)
             val pursuitIcon: ImageView = this.itemView.findViewById(R.id.objective_icon)
             val objectivesRecyclerView: RecyclerView = this.itemView.findViewById(R.id.objectivesHolder)
+            val rewardsRecyclerView: RecyclerView = this.itemView.findViewById(R.id.rewardsHolder)
             val pursuitHeader: LinearLayout = this.itemView.findViewById(R.id.pursuitHeader)
             val expirationText: TextView = this.itemView.findViewById(R.id.expiration_label)
 
-            pursuitTitleText.text = pursuit.databaseItem.displayProperties.name
-            pursuitDescriptionText.text = pursuit.databaseItem.displayProperties.description
+            pursuitTitleText.text = pursuit.databaseItem.displayProperties!!.name
+            pursuitDescriptionText.text = pursuit.databaseItem.displayProperties!!.description
             pursuitTypeText.text = pursuit.databaseItem.itemTypeAndTierDisplayName
 
             // Expiration display handling
@@ -109,7 +111,7 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
                 expirationText.visibility = View.GONE
             }
 
-            val typeAndTierBreakdown = pursuit.databaseItem.itemTypeAndTierDisplayName.split(" ")
+            val typeAndTierBreakdown = pursuit.databaseItem.itemTypeAndTierDisplayName!!.split(" ")
             when(typeAndTierBreakdown[0]) {
                 "Common" -> {
                     pursuitHeader.setBackgroundColor(pursuitHeader.resources.getColor(R.color.pursuit_common_background))
@@ -133,14 +135,24 @@ class PursuitsAdapter: RecyclerView.Adapter<PursuitsAdapter.PursuitHolder>() {
                 }
             }
 
-            Picasso.with(ctx).load("https://bungie.net${pursuit.databaseItem.displayProperties.icon}").into(pursuitIcon)
+            Picasso.with(ctx).load("https://bungie.net${pursuit.databaseItem.displayProperties!!.icon}").into(pursuitIcon)
 
-            val layoutManager = LinearLayoutManager(ctx, RecyclerView.VERTICAL, false)
+            val objectivesLayoutManager = LinearLayoutManager(ctx, RecyclerView.VERTICAL, false)
+            val rewardsLayoutManager = LinearLayoutManager(ctx, RecyclerView.VERTICAL, false)
+
             objectivesRecyclerView.apply {
-                this.layoutManager = layoutManager
+                this.layoutManager = objectivesLayoutManager
                 val adapter = ObjectivesAdapter()
                 this.adapter = adapter
                 adapter.setObjectivesList(pursuit.objectives)
+                adapter.notifyDataSetChanged()
+            }
+
+            rewardsRecyclerView.apply {
+                this.layoutManager = rewardsLayoutManager
+                val adapter = RewardsAdapter()
+                this.adapter = adapter
+                adapter.setRewards(pursuit.rewards)
                 adapter.notifyDataSetChanged()
             }
 

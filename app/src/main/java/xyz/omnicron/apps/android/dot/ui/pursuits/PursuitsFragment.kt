@@ -14,7 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.progressindicator.ProgressIndicator
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import com.leinardi.android.speeddial.SpeedDialView
@@ -39,7 +39,7 @@ class PursuitsFragment : Fragment(), IPursuitsView {
 
     private lateinit var characterFab: SpeedDialView
     private lateinit var nothingLayout: LinearLayout
-    private lateinit var refreshProgressBar: ProgressIndicator
+    private lateinit var refreshProgressBar: LinearProgressIndicator
 
     private lateinit var selectedCharacterId: String
 

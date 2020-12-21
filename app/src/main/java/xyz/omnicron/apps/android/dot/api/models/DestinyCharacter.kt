@@ -5,6 +5,7 @@ import io.reactivex.schedulers.Schedulers
 import org.json.JSONArray
 import org.json.JSONObject
 import xyz.omnicron.apps.android.dot.api.Destiny
+import xyz.omnicron.apps.android.dot.database.DestinyDatabase
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -71,6 +72,7 @@ class DestinyCharacter(var membershipId: String,
 
                         this.pursuits = stripPursuitsWithZeroObjectives(this.pursuits)
                         this.pursuits = stripCompletedPursuits(this.pursuits)
+                        this.pursuits = addRewardsToPursuits(this.pursuits, destinyApi.database)
                         subscriber.onComplete()
                     }).start()
                 }
@@ -142,6 +144,24 @@ class DestinyCharacter(var membershipId: String,
         }
 
         return cleanedPursuits
+    }
+
+    private fun addRewardsToPursuits(pursuits: ArrayList<DestinyPursuit>, database: DestinyDatabase): ArrayList<DestinyPursuit> {
+        val updatedPursuits = arrayListOf<DestinyPursuit>()
+
+        for(pursuit in pursuits) {
+            if(pursuit.databaseItem.rewards?.entries?.isNotEmpty() == true) {
+                for (reward in pursuit.databaseItem.rewards!!.entries) {
+                    val rewardItemDefinition = database.getDestinyDatabaseItemFromHash(reward.itemHash.toInt(), "DestinyInventoryItemDefinition")
+                    rewardItemDefinition?.let { item ->
+                        pursuit.rewards.add(item)
+                    }
+                }
+            }
+            updatedPursuits.add(pursuit)
+        }
+
+        return updatedPursuits
     }
 }
 
