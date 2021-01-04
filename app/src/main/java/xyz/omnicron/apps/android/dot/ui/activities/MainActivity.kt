@@ -20,7 +20,6 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
-import com.google.android.material.snackbar.Snackbar
 import com.jakewharton.processphoenix.ProcessPhoenix
 import com.squareup.picasso.Picasso
 import io.reactivex.Completable
@@ -273,7 +272,9 @@ class MainActivity : AppCompatActivity() {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
         menu[0].setOnMenuItemClickListener {
-            Snackbar.make(this.nav_view, "Settings is not ready yet, check back soon! :)", Snackbar.LENGTH_LONG).show()
+//            Snackbar.make(this.nav_view, "Settings is not ready yet, check back soon! :)", Snackbar.LENGTH_LONG).show()
+            val settingsIntent = Intent(this, AppSettingsActivity::class.java)
+            startActivity(settingsIntent)
             return@setOnMenuItemClickListener true
         }
         return true

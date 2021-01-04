@@ -1,0 +1,14 @@
+<resources>
+    <!-- Pursuits => Armor Preference -->
+    <string-array name="pref_pursuits_show_armor_pursuits_titles">
+        <item>Show Only From Equipped Armor</item>
+        <item>Show From Equipped and Inventory</item>
+        <item>Never</item>
+    </string-array>
+
+    <string-array name="pref_pursuits_show_armor_pursuits_values">
+        <item>equipped_only</item>
+        <item>all_armor_present</item>
+        <item>never</item>
+    </string-array>
+</resources>

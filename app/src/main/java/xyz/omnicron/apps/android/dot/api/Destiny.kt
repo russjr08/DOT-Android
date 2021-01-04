@@ -3,6 +3,7 @@ package xyz.omnicron.apps.android.dot.api
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.preference.PreferenceManager
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -34,6 +35,7 @@ class Destiny(ctx: Context): Interceptor {
     private val destinyApi: DestinyService
     private val prefs: SharedPreferences
     private val authenticationData: BungieAuthenticationData
+    private val appPreferences = PreferenceManager.getDefaultSharedPreferences(ctx)
 
     lateinit var bungieNetUser: BungieNetUser
     lateinit var destinyProfile: DestinyProfile
@@ -327,9 +329,10 @@ class Destiny(ctx: Context): Interceptor {
         return "Bearer ${authenticationData.accessToken}"
     }
 
+    fun getAppPreferences(): SharedPreferences = appPreferences
+
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
         val original = chain.request()
-        val nullAuthToken = "NO_TOKEN"
         val request = original.newBuilder()
             .header("X-API-KEY", Constants.API_KEY)
             .method(original.method, original.body)

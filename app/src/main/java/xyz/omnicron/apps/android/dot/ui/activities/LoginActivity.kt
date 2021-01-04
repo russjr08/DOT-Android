@@ -14,6 +14,7 @@ import androidx.browser.customtabs.CustomTabsClient
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsServiceConnection
 import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.customview.customView
 import com.downloader.*
@@ -49,6 +50,8 @@ class LoginActivity : AppCompatActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
+        PreferenceManager.setDefaultValues(this, R.xml.pursuits_preferences, false)
 
         preferences = getSharedPreferences("dot", Context.MODE_PRIVATE)
 

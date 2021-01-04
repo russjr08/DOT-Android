@@ -11,18 +11,23 @@
     <application
         android:name=".App"
         android:allowBackup="true"
-        android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name=".ui.activities.AppSettingsActivity"
+            android:label="@string/title_activity_app_settings" >
+        </activity>
         <activity
             android:name=".ui.activities.MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".ui.activities.LoginActivity">
+        <activity android:name=".ui.activities.LoginActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>

@@ -1,0 +1,10 @@
+<PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <Preference
+        app:key="pursuits_header"
+        app:title="@string/pref_pursuits_header"
+        app:icon="@drawable/clipboard_list_outline"
+        app:fragment="xyz.omnicron.apps.android.dot.ui.activities.AppSettingsActivity$PursuitsPrefsFragment"/>
+
+</PreferenceScreen>

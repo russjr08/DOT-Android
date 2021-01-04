@@ -7,6 +7,7 @@ import java.util.*
 open class DestinyItem(var databaseItem: DestinyDatabaseItem,
                        var instanceId: String,
                        var quantity: Int = 1,
+                       var transferStatus: Int = 0,
                        var bucketHash: Int) {
 
 
@@ -16,8 +17,8 @@ open class DestinyItem(var databaseItem: DestinyDatabaseItem,
 }
 
 class DestinyPursuit(databaseItem: DestinyDatabaseItem,
-                    instanceId: String, quantity: Int, val expirationDate: Date?, bucketHash: Int
-) : DestinyItem(databaseItem, instanceId, quantity, bucketHash) {
+                    instanceId: String, quantity: Int, val expirationDate: Date?, transferStatus: Int, bucketHash: Int
+) : DestinyItem(databaseItem, instanceId, quantity, transferStatus, bucketHash) {
 
     val objectives = arrayListOf<DestinyObjectiveData>()
     val rewards = arrayListOf<DestinyDatabaseItem>()

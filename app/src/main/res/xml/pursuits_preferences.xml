@@ -1,0 +1,27 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:icon="@drawable/list_done"
+        android:key="pref_pursuits_show_completed"
+        android:summaryOff="@string/pref_pursuits_show_completed_summary_off"
+        android:summaryOn="@string/pref_pursuits_show_completed_summary_on"
+        android:title="@string/pref_pursuits_show_completed" />
+    <ListPreference
+        android:defaultValue="equipped_only"
+        android:entries="@array/pref_pursuits_show_armor_pursuits_titles"
+        android:entryValues="@array/pref_pursuits_show_armor_pursuits_values"
+        android:icon="@drawable/tshirt"
+        android:key="pref_pursuits_show_armor_pursuits"
+        android:summary="@string/pref_pursuits_show_armor_pursuits_summary"
+        android:title="@string/pref_pursuits_show_armor_pursuits" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:icon="@drawable/no_tasks"
+        android:key="pref_pursuits_show_zero_objectives"
+        android:summaryOff="@string/pref_pursuits_show_zero_objectives_summary_off"
+        android:summaryOn="@string/pref_pursuits_show_zero_objectives_summary_on"
+        android:title="@string/pref_pursuits_show_zero_objectives" />
+
+</PreferenceScreen>

@@ -4,8 +4,11 @@ import io.reactivex.Completable
 import io.reactivex.schedulers.Schedulers
 import org.json.JSONArray
 import org.json.JSONObject
+import org.koin.core.KoinComponent
+import org.koin.core.inject
 import xyz.omnicron.apps.android.dot.api.Destiny
 import xyz.omnicron.apps.android.dot.database.DestinyDatabase
+import xyz.omnicron.apps.android.dot.ui.activities.AppSettingsActivity
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -21,7 +24,13 @@ class DestinyCharacter(var membershipId: String,
                        var gender: DestinyGender,
                        var classType: DestinyClass,
                        var pursuits: ArrayList<DestinyPursuit> = arrayListOf()
-) {
+) : KoinComponent {
+
+    private val destiny: Destiny by inject()
+
+    private val armorBuckets: Array<Long> = arrayOf(1585787867, 14239492, 20886954, 3448274439, 3551918588)
+
+
     fun updatePursuits(destinyApi: Destiny): Completable {
         return Completable.create { subscriber ->
             destinyApi.retrieveCharacterData(this.characterId, listOf(200,202,102,201,205,301))
@@ -34,15 +43,17 @@ class DestinyCharacter(var membershipId: String,
                         data.getJSONObject("equipment").let { equipmentNode ->
                             val dataNode = equipmentNode.getJSONObject("data")
                             val itemsArray = dataNode.getJSONArray("items")
-                            addPursuitFromNode(itemsArray, destinyApi)
+                            loopThroughPotentialPursuits(itemsArray, destinyApi)
                         }
+
 
                         // Parse items from "inventory"
                         data.getJSONObject("inventory").let { inventoryNode ->
                             val dataNode = inventoryNode.getJSONObject("data")
                             val itemsArray = dataNode.getJSONArray("items")
-                            addPursuitFromNode(itemsArray, destinyApi)
+                            loopThroughPotentialPursuits(itemsArray, destinyApi)
                         }
+
 
                         // Begin parsing item components data (such as pursuit objectives)
                         val componentNode = data.getJSONObject("itemComponents")
@@ -70,8 +81,15 @@ class DestinyCharacter(var membershipId: String,
                             }
                         }
 
-                        this.pursuits = stripPursuitsWithZeroObjectives(this.pursuits)
-                        this.pursuits = stripCompletedPursuits(this.pursuits)
+                        if(!destiny.getAppPreferences().getBoolean("pref_pursuits_show_zero_objectives", AppSettingsActivity.PREFS_PURSUITS_DEFAULT_SHOW_ZERO_OBJECTIVES)) {
+                            this.pursuits = stripPursuitsWithZeroObjectives(this.pursuits)
+                        }
+                        if(!destiny.getAppPreferences().getBoolean("pref_pursuits_show_completed", AppSettingsActivity.PREFS_PURSUITS_DEFAULT_SHOW_COMPLETED)) {
+                            this.pursuits = stripCompletedPursuits(this.pursuits)
+                        } else {
+                            this.pursuits = stripEmptyArmor(this.pursuits)
+                        }
+
                         this.pursuits = addRewardsToPursuits(this.pursuits, destinyApi.database)
                         subscriber.onComplete()
                     }).start()
@@ -79,38 +97,51 @@ class DestinyCharacter(var membershipId: String,
         }
     }
 
-    private fun addPursuitFromNode(itemsArray: JSONArray, destinyApi: Destiny) {
-        // Begin parsing basic item entries from API
+    private fun loopThroughPotentialPursuits(itemsArray: JSONArray, destinyApi: Destiny) {
         for(i in 0 until itemsArray.length()) {
             val itemNode = itemsArray[i] as JSONObject
-            val armorBuckets = arrayOf(1585787867, 14239492, 20886954, 3448274439, 3551918588)
-            if(itemNode.getInt("bucketHash") != 1345459588 && !armorBuckets.contains(itemNode.getLong("bucketHash"))) {
-                continue
-            }
-            val dbItem = destinyApi.database.getDestinyDatabaseItemFromHash(itemNode.getInt("itemHash"),
-                "DestinyInventoryItemDefinition")
-            dbItem?.let { databaseItem ->
-                if(itemNode.has("expirationDate")) {
-                    val pursuit = DestinyPursuit(databaseItem = databaseItem,
-                        instanceId = itemNode.getString("itemInstanceId"),
-                        quantity = itemNode.getInt("quantity"),
-                        expirationDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).parse(itemNode.getString("expirationDate")),
-                        bucketHash = itemNode.getInt("bucketHash")
-                    )
-                    this.pursuits.add(pursuit)
-
-                } else {
-                    val pursuit = DestinyPursuit(databaseItem = databaseItem,
-                        instanceId = itemNode.optString("itemInstanceId"),
-                        quantity = itemNode.getInt("quantity"),
-                        expirationDate = null,
-                        bucketHash = itemNode.getInt("bucketHash")
-                    )
-                    this.pursuits.add(pursuit)
-
+            if(itemNode.getInt("bucketHash") == 1345459588) {
+                addPursuitFromNode(itemNode, destinyApi)
+            } else if(this.armorBuckets.contains(itemNode.getLong("bucketHash"))) {
+                val armorPreference = destiny.getAppPreferences().getString("pref_pursuits_show_armor_pursuits", "never")!!
+                if(armorPreference == "all_armor_present") {
+                    addPursuitFromNode(itemNode, destinyApi)
+                } else if(armorPreference == "equipped_only") {
+                    if(itemNode.getInt("transferStatus") == 1) {
+                        addPursuitFromNode(itemNode, destinyApi)
+                    }
                 }
+            }
+        }
+    }
+
+    private fun addPursuitFromNode(itemNode: JSONObject, destinyApi: Destiny) {
+        // Begin parsing basic item entries from API
+        val dbItem = destinyApi.database.getDestinyDatabaseItemFromHash(itemNode.getInt("itemHash"),
+            "DestinyInventoryItemDefinition")
+        dbItem?.let { databaseItem ->
+            if(itemNode.has("expirationDate")) {
+                val pursuit = DestinyPursuit(databaseItem = databaseItem,
+                    instanceId = itemNode.getString("itemInstanceId"),
+                    quantity = itemNode.getInt("quantity"),
+                    expirationDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).parse(itemNode.getString("expirationDate")),
+                    transferStatus = itemNode.getInt("transferStatus"),
+                    bucketHash = itemNode.getInt("bucketHash")
+                )
+                this.pursuits.add(pursuit)
+
+            } else {
+                val pursuit = DestinyPursuit(databaseItem = databaseItem,
+                    instanceId = itemNode.optString("itemInstanceId"),
+                    quantity = itemNode.getInt("quantity"),
+                    expirationDate = null,
+                    transferStatus = itemNode.getInt("transferStatus"),
+                    bucketHash = itemNode.getInt("bucketHash")
+                )
+                this.pursuits.add(pursuit)
 
             }
+
         }
     }
 
@@ -139,6 +170,18 @@ class DestinyCharacter(var membershipId: String,
             }
 
             if(hasAnIncompleteObjective) {
+                cleanedPursuits.add(pursuit)
+            }
+        }
+
+        return cleanedPursuits
+    }
+
+    private fun stripEmptyArmor(pursuits: ArrayList<DestinyPursuit>): ArrayList<DestinyPursuit> {
+        val cleanedPursuits = arrayListOf<DestinyPursuit>()
+
+        for(pursuit in pursuits) {
+            if(!this.armorBuckets.contains(pursuit.bucketHash.toLong()) && pursuit.objectives.size != 0) {
                 cleanedPursuits.add(pursuit)
             }
         }
