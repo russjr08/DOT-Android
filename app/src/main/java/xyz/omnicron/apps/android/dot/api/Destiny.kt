@@ -63,19 +63,19 @@ class Destiny(ctx: Context): Interceptor {
         val currentAccessToken = prefs.getString("accessToken", "NO_TOKEN") as String
         val currentRefreshToken = prefs.getString("refreshToken", "NO_TOKEN") as String
 
-        val currentAccessExpireDate = LocalDateTime.parse(prefs.getString("accessTokenExpires", Instant.EPOCH.toString()))
-        val currentRefreshExpireDate = LocalDateTime.parse(prefs.getString("refreshTokenExpires", Instant.EPOCH.toString()))
+        val currentAccessExpireDate = LocalDateTime.parse(prefs.getString("accessTokenExpires", LocalDateTime.now().toString()))
+        val currentRefreshExpireDate = LocalDateTime.parse(prefs.getString("refreshTokenExpires", LocalDateTime.now().toString()))
 
         authenticationData = BungieAuthenticationData(currentAccessToken, currentRefreshToken, currentAccessExpireDate, currentRefreshExpireDate)
 
 
     }
 
-    fun getSavedMembershipId(): String {
+    private fun getSavedMembershipId(): String {
         return prefs.getLong("membershipId", 0).toString()
     }
 
-    fun getSavedMembershipType(): MembershipType {
+    private fun getSavedMembershipType(): MembershipType {
         return MembershipType.from(prefs.getInt("membershipType", -1))
     }
 
