@@ -154,6 +154,8 @@ class LoginActivity : AppCompatActivity(),
 
         loginPopup?.dismiss()
 
+        destiny.initializeAuthenticationData()
+
         checkAndDownloadManifest()
 
     }

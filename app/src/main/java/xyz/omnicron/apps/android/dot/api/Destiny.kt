@@ -34,7 +34,7 @@ class Destiny(ctx: Context): Interceptor {
 
     private val destinyApi: DestinyService
     private val prefs: SharedPreferences
-    private val authenticationData: BungieAuthenticationData
+    private lateinit var authenticationData: BungieAuthenticationData
     private val appPreferences = PreferenceManager.getDefaultSharedPreferences(ctx)
 
     lateinit var bungieNetUser: BungieNetUser
@@ -62,15 +62,18 @@ class Destiny(ctx: Context): Interceptor {
 
         prefs = ctx.getSharedPreferences("dot", Context.MODE_PRIVATE)
 
-        val currentAccessToken = prefs.getString("accessToken", "NO_TOKEN") as String
-        val currentRefreshToken = prefs.getString("refreshToken", "NO_TOKEN") as String
+        initializeAuthenticationData()
+
+    }
+
+    fun initializeAuthenticationData() {
+        val currentAccessToken = prefs.getString("accessToken", "") as String
+        val currentRefreshToken = prefs.getString("refreshToken", "") as String
 
         val currentAccessExpireDate = LocalDateTime.parse(prefs.getString("accessTokenExpires", LocalDateTime.now().toString()))
         val currentRefreshExpireDate = LocalDateTime.parse(prefs.getString("refreshTokenExpires", LocalDateTime.now().toString()))
 
         authenticationData = BungieAuthenticationData(currentAccessToken, currentRefreshToken, currentAccessExpireDate, currentRefreshExpireDate)
-
-
     }
 
     private fun getSavedMembershipId(): String {
