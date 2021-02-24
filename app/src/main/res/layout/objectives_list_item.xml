@@ -24,7 +24,7 @@
             android:id="@+id/objective_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/primaryTextColor"
+            android:textColor="@color/pursuit_body_text_color"
             android:layout_marginBottom="10dp"
             tools:text="Example Objective Progress Goes Here"/>
 
