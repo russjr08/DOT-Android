@@ -73,7 +73,7 @@
                 android:layout_height="wrap_content">
 
                 <TextView
-                    android:textColor="@color/primaryTextColor"
+                    android:textColor="@color/pursuit_body_text_color"
                     android:id="@+id/pursuitDescriptionText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

@@ -6,12 +6,16 @@
   <color name="secondaryColor">#8d6e63</color>
   <color name="secondaryLightColor">#be9c91</color>
   <color name="colorAccent">#5f4339</color>
-  <color name="primaryTextColor">#ffffff</color>
-  <color name="secondaryTextColor">#ffffff</color>
+  <color name="primaryTextColor">#000000</color>
+  <color name="secondaryTextColor">#000000</color>
+
+  <color name="login_emblem_tint">#030000</color>
+  <color name="login_emblem_foreground_tint">#030000</color>
 
   <color name="pursuit_legendary_background">#513065</color>
   <color name="pursuit_exotic_background">#CEAE33</color>
   <color name="pursuit_rare_background">#5076A3</color>
   <color name="pursuit_common_background">#DCDCDC</color>
   <color name="pursuitBackground">#242121</color>
+  <color name="pursuit_body_text_color">#FFFFFF</color>
 </resources>

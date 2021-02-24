@@ -1,0 +1,21 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<resources>
+    <color name="colorPrimary">#1a237e</color>
+    <color name="primaryLightColor">#534bae</color>
+    <color name="colorPrimaryDark">#000051</color>
+    <color name="secondaryColor">#8d6e63</color>
+    <color name="secondaryLightColor">#be9c91</color>
+    <color name="colorAccent">#d3d3d3</color>
+    <color name="primaryTextColor">#ffffff</color>
+    <color name="secondaryTextColor">#ffffff</color>
+
+    <color name="login_emblem_tint">@android:color/transparent</color>
+    <color name="login_emblem_foreground_tint">@color/primaryTextColor</color>
+
+    <color name="pursuit_legendary_background">#513065</color>
+    <color name="pursuit_exotic_background">#CEAE33</color>
+    <color name="pursuit_rare_background">#5076A3</color>
+    <color name="pursuit_common_background">#DCDCDC</color>
+    <color name="pursuitBackground">#242121</color>
+    <color name="pursuit_body_text_color">#FFFFFF</color>
+</resources>
