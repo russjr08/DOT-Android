@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.beust.klaxon.Json
 import com.beust.klaxon.Klaxon
+import xyz.omnicron.apps.android.dot.api.models.DestinyRecord
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -82,12 +83,38 @@ class DestinyDatabase(val ctx: Context, val DB_NAME: String): SQLiteOpenHelper(c
         return null
     }
 
+    fun getDestinyDatabaseRecordFromHash(hash: Int): DestinyDatabaseRecord? {
+        val table = "DestinyRecordDefinition"
+        // Database lookups are expensive. If the record has already been looked up and cached,
+        // return the entry from cache instead.
+        if(DestinyDatabaseCache.recordsCache.containsKey(hash)) {
+            return DestinyDatabaseCache.recordsCache[hash]
+        }
+
+        val database = this.openDatabase()
+        val cursor = database.rawQuery("SELECT * FROM $table WHERE id + 4294967296 = $hash OR id = $hash", null)
+
+        if(cursor.moveToFirst()) {
+            val record = Klaxon().parse<DestinyDatabaseRecord>(cursor.getString(1))
+
+            // Cache the item since it was not previously cached
+            record?.let { DestinyDatabaseCache.recordsCache.put(hash, it) }
+            this.logger.log(Level.INFO, "Added an entry into records database cache: ${record?.displayProperties?.name}")
+            cursor.close()
+            database.close()
+            return record
+        }
+
+        return null
+    }
+
 }
 
 class DestinyDatabaseCache {
     companion object {
         var itemCache: HashMap<Int, DestinyDatabaseItem> = HashMap()
         var objectivesCache: HashMap<Int, DestinyDatabaseObjective> = HashMap()
+        var recordsCache: HashMap<Int, DestinyDatabaseRecord> = HashMap()
     }
 }
 
@@ -99,6 +126,21 @@ class DestinyDatabaseItem(
     var itemTypeAndTierDisplayName: String?,
     @Json("value") var rewards: DestinyDatabaseRewards? = null
 )
+
+class DestinyDatabaseRecord(
+    var hash: Int,
+    var displayProperties: DisplayProperties,
+    var scope: RecordScopeType,
+    var objectiveHashes: List<Int>? = null,
+    var index: Int,
+    var rewardItems: Array<DestinyDatabaseRewardEntry> = emptyArray(),
+    var parentNodeHashes: List<Int>? = null
+)
+
+enum class RecordScopeType(val type: Int) {
+    CHARACTER(1),
+    ACCOUNT(2)
+}
 
 class DestinyDatabaseRewards(
     @Json(name = "itemValue") var entries: Array<DestinyDatabaseRewardEntry> = emptyArray()
